@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FeedRank</title>
+    <link rel="stylesheet" type="text/css" href="Animate/animate.css">
+    <link rel="stylesheet" href="popup_styles/popup_subs.css">
+    <link rel="stylesheet" href="popup_styles/popup.css">
+</head>
+<body>
+  <div class="main_div animate__animated animate__zoomIn">
+    <div class="chrome">
+      <div class="header sf-fade-header">
+        <div class="sf-header-brand" style="display: flex; align-items: center;">
+          <img id="image_logo" class="image_logo animate__animated animate__bounceInDown" src="Icons/icon-48.png" alt="FeedRank">
+          <h1 class="heading">FeedRank</h1>
+        </div>
+
+        <!-- Settings header — crossfades over the brand block when the gear is
+             clicked (Instagram only). Absolutely positioned so the Free/Pro tag
+             on the right never moves between the two views. -->
+        <div class="sf-header-settings">
+          <button type="button" id="sfSettingsBack" class="sf-settings-back" aria-label="Back" tabindex="-1">
+            <span class="sf-settings-back-ic" aria-hidden="true"></span>
+          </button>
+          <h1 class="heading sf-settings-title">Settings</h1>
+        </div>
+
+        <div class="sf-header-right">
+          <!-- Gear — shown only in Instagram mode (body.sf-gear-on). Keeps its
+               footprint while the Settings view is open (fades out in place) so
+               the Free/Pro tag stays in the same pixel. -->
+          <button type="button" id="sfGearBtn" class="sf-gear-btn" aria-label="Settings" aria-expanded="false">
+            <span class="sf-gear-ic" aria-hidden="true"></span>
+          </button>
+          <span class="beta" style="display:none;">Free</span>
+        </div>
+      </div>
+
+      <!-- Feature banner notification (GLOBAL) -->
+      <div class="footer_div_again_sub_feature sf-fade-banner" style="display: none;">
+        <div class="footer_text_with_icon">
+          <!-- NEW: icon instead of ✨ -->
+          <img
+            src="Icons/startsIcon.png"
+            class="sf_banner__partyIcon__v1"
+            alt=""
+            aria-hidden="true"
+          />
+
+          <p class="footer_text_again_subheader_sub_bottom">
+            Export transcripts to your spreadsheet — click Select after sorting
+          </p>
+
+          <img src="Icons/close_banner.png" class="close_banner_icon" alt="Close" />
+        </div>
+      </div>
+     <!-- Feature banner notification (END) -->
+
+      <div class="nav_buttons">
+        <div class="main_nav_div_parent">
+
+          <!-- Zero state -->
+          <div class="main_nav_div_zero_state sf-fade-content">
+            <label style="font-weight: 400; font-size: 11px; color: #9ca3af; padding-left: 15px; letter-spacing: 0.02em;">
+              Choose a feed
+            </label>
+
+            <div style="padding: 10px 15px 0 15px;">
+              <div class="zeroStateButtonGroup">
+                <button id="instaButton" class="zeroStateButtonMain">
+                  <div class="zeroStateButtonLabel">
+                    <span class="zs-feed-icon"><img src="Icons/ZeroStateIcons/Insta.svg" alt="" style="width: 14px;" /></span>
+                    Instagram
+                  </div>
+                  <img src="Icons/ZeroStateIcons/arrow.svg" />
+                </button>
+
+                <button id="tiktokButton" class="zeroStateButtonMain">
+                  <div class="zeroStateButtonLabel">
+                    <span class="zs-feed-icon"><img src="Icons/ZeroStateIcons/tiktok.svg" alt="" style="width: 13px;" /></span>
+                    TikTok
+                  </div>
+                  <img src="Icons/ZeroStateIcons/arrow.svg" />
+                </button>
+
+                <button id="youtubeButton" class="zeroStateButtonMain">
+                  <div class="zeroStateButtonLabel">
+                    <span class="zs-feed-icon"><img src="Icons/ZeroStateIcons/youtube.svg" alt="" style="width: 15px;" /></span>
+                    YouTube
+                  </div>
+                  <img src="Icons/ZeroStateIcons/arrow.svg" />
+                </button>
+
+                <button id="facebookButton" class="zeroStateButtonMain">
+                  <div class="zeroStateButtonLabel">
+                    <span class="zs-feed-icon"><img src="Icons/ZeroStateIcons/facebook.svg" alt="" style="width: 13px;" /></span>
+                    Facebook
+                  </div>
+                  <img src="Icons/ZeroStateIcons/arrow.svg" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instagram Sort by date vs items -->
+          <div class="InstaMain sf-fade-content" style="display: none;">
+
+          <!-- No Sort/Actions segmented control here (unlike TikTok/Facebook):
+               Sort is the only landing view, and the old Actions panel lives
+               behind the header gear as the Settings subview below. -->
+
+          <!-- Sort panel -->
+          <div id="igSortContent" style="display: flex; flex-direction: column; width: 100%;">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+
+              <!-- Single unified box. With the Sort/Actions control gone the
+                   card seats snug under the header — see the shared margin-top
+                   trim in popup.css. -->
+              <div id="insta_sort_menu" class="buttonMainDiv sf-sort-unified">
+
+                <!-- Filter by section -->
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label">Filters</span>
+                  <div class="segmented-control sf-sort-seg">
+                    <button class="itemButtonClass" id="itemButton">
+                      <img src="Icons/gridNofill.svg" class="sf-tab-icon"> Posts
+                    </button>
+                    <button class="dateRangeButtonClass" id="dateRangeButton">
+                      <img src="Icons/popupIcons/calenderPopup.svg" class="sf-tab-icon"> Date
+                    </button>
+                  </div>
+                  <div class="sf-sort-dd-row">
+                    <!-- Hidden selects — JS reads .value / active attr from these -->
+                    <select class="sf-hidden-select" id="no_reels_selected" active="on" data-items-noun="Posts">
+                      <option value="25_reels" selected>Latest 25 Posts</option>
+                      <option value="50_reels">Latest 50 Posts</option>
+                      <option value="100_reels">Latest 100 Posts</option>
+                      <option value="200_reels">Latest 200 Posts</option>
+                      <option value="1000_reels">Latest 1K Posts</option>
+                      <option value="all_reels">All Posts</option>
+                    </select>
+                    <select class="sf-hidden-select" id="dates_selected" active="off" data-items-noun="Posts">
+                      <option value="1_week" selected>Posts from 1 Week Back</option>
+                      <option value="1_month">Posts from 1 Month Back</option>
+                      <option value="3_month">Posts from 3 Months Back</option>
+                      <option value="6_month">Posts from 6 Months Back</option>
+                      <option value="1_year">Posts from 1 Year Back</option>
+                      <option value="all_reels">All Posts</option>
+                    </select>
+
+                    <!-- Custom dropdown: IG items -->
+                    <div class="sf-dd" id="sf-dd-ig-items">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Latest 25 Posts</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 Posts</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                          <!-- Free/signed-out only — wrapper shown by sf_dd_lock(), hidden by
+                               unlock_all_options(). Divider + inset button so the row's hover
+                               matches the option rows exactly. -->
+                          <div class="sf-dd-get-pro" style="display:none;">
+                            <div class="sf-dd-divider"></div>
+                            <button type="button" class="sf-dd-get-pro-btn" data-sf-upgrade="dropdown_row">
+                              <span class="sf-dd-get-pro-left">
+                                <span class="sf-dd-get-pro-icon" aria-hidden="true"></span>
+                                <span class="sf-dd-get-pro-label">Get Pro</span>
+                              </span>
+                              <span class="sf-dd-get-pro-arrow" aria-hidden="true"></span>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel" aria-hidden="true">
+                          <div class="sf-dd-custom-title">Set custom number of posts</div>
+                          <input type="number" min="1" max="10000" step="1" inputmode="numeric"
+                                 class="sf-dd-custom-input" placeholder="e.g. 347" />
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Custom dropdown: IG dates -->
+                    <div class="sf-dd" id="sf-dd-ig-dates" style="display:none;">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Posts from 1 Week Back</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="1_week">Posts from 1 Week Back</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>Posts from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>Posts from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>Posts from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>Posts from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                          <!-- Free/signed-out only — wrapper shown by sf_dd_lock(), hidden by
+                               unlock_all_options(). Divider + inset button so the row's hover
+                               matches the option rows exactly. -->
+                          <div class="sf-dd-get-pro" style="display:none;">
+                            <div class="sf-dd-divider"></div>
+                            <button type="button" class="sf-dd-get-pro-btn" data-sf-upgrade="dropdown_row">
+                              <span class="sf-dd-get-pro-left">
+                                <span class="sf-dd-get-pro-icon" aria-hidden="true"></span>
+                                <span class="sf-dd-get-pro-label">Get Pro</span>
+                              </span>
+                              <span class="sf-dd-get-pro-arrow" aria-hidden="true"></span>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel sf-dd-custom-panel-date" aria-hidden="true">
+                          <div class="sf-dd-custom-title">
+                            Set date range
+                            <span class="sf-date-status"></span>
+                          </div>
+                          <div class="sf-cal">
+                            <div class="sf-cal-head">
+                              <button type="button" class="sf-cal-nav sf-cal-prev" aria-label="Previous month"></button>
+                              <span class="sf-cal-title"></span>
+                              <button type="button" class="sf-cal-nav sf-cal-next" aria-label="Next month"></button>
+                            </div>
+                            <div class="sf-cal-dow">
+                              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                            </div>
+                            <div class="sf-cal-grid"></div>
+                          </div>
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider between sections -->
+
+                <!-- Sort by section -->
+                <div class="sf-sort-inner-section sf-sort-inner-section--sort">
+                  <span class="sf-section-label">Sort by</span>
+                  <div class="sf-sort-card">
+                  <button id="sortLikesClick" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/LoveGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Likes</span>
+                    </div>
+                  </button>
+
+                  <button id="sortViewsClick" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/play.svg" style="width: 9px; margin-right: 12px;" />
+                      <span>Views</span>
+                    </div>
+                  </button>
+
+                  <!-- Outlier score — preview UI, gated by `outlierFlag` in popup.js.
+                       Hidden by default; revealed when `.InstaMain` gets `.sf-outlier-on`. -->
+                  <button id="sortOutlierClick" class="SortButtonMain sf-outlier-btn">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <span class="sf-outlier-flame"></span>
+                      <span>Outlier score</span>
+                      <span class="sf-outlier-info-wrap">
+                        <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Outlier score"></span>
+                        <span class="sf-outlier-tooltip" role="tooltip">How many times more views a post got than usual. Higher means a bigger breakout.</span>
+                      </span>
+                    </div>
+                  </button>
+
+                  <button id="sortCommentsClick" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/ChatGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Comments</span>
+                    </div>
+                  </button>
+
+                  <button id="sortOldestClicks" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Oldest</span>
+                    </div>
+                  </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div><!-- /igSortContent -->
+
+          <!-- Settings subview (the old Actions panel). Reached from the header
+               gear, dismissed by the header back arrow or Escape. Kept as its
+               own sibling panel so the swap is a straight crossfade-slide. -->
+          <div id="igDownloadContent" style="display: none; flex-direction: column; width: 100%;" aria-hidden="true">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+              <div class="buttonMainDiv sf-sort-unified">
+
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label sf-dl-head">
+                    Display
+                    <span class="sf-outlier-info-wrap sf-info-down">
+                      <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Display buttons"></span>
+                      <span class="sf-outlier-tooltip" role="tooltip">Adds a Download button to each video and post.</span>
+                    </span>
+                  </span>
+                  <div class="sf-sort-card">
+                    <div class="sf-dl-row" style="display:none !important;">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">Save button</div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="igSaveToggle">
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                    <div class="sf-dl-row sf-dl-row-last">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">
+                          Download button
+                        </div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="igDownloadToggle" checked>
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                    <div class="sf-dl-row" style="display:none !important;">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">Transcribe button</div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="igTranscribeToggle">
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div><!-- /InstaMain -->
+
+          <!-- TIKTOK -->
+          <div class="TikTokMain sf-fade-content" style="display: none;">
+
+          <!-- No Sort/Actions segmented control (see .InstaMain): Sort is the
+               only landing view and Actions lives behind the header gear. -->
+
+          <!-- Sort panel -->
+          <div id="ttSortContent" style="display: flex; flex-direction: column; width: 100%;">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+
+              <!-- Single unified box -->
+              <div id="tiktok_sort_menu" class="buttonMainDiv sf-sort-unified">
+
+                <!-- Filter by section -->
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label">Filter</span>
+                  <div class="segmented-control sf-sort-seg">
+                    <button class="itemButtonClassTikTok" id="itemButtonTikTok">
+                      <img src="Icons/gridNofill.svg" class="sf-tab-icon"> TikToks
+                    </button>
+                    <button class="dateRangeButtonClassTikTok" id="dateRangeButtonTikTok">
+                      <img src="Icons/popupIcons/calenderPopup.svg" class="sf-tab-icon"> Date
+                    </button>
+                  </div>
+                  <div class="sf-sort-dd-row">
+                    <!-- Hidden selects — JS reads .value / active attr from these -->
+                    <select class="sf-hidden-select" id="no_reels_selected_tiktok" active="on" data-items-noun="TikToks">
+                      <option value="25_reels" selected>Latest 25 TikToks</option>
+                      <option value="50_reels">Latest 50 TikToks</option>
+                      <option value="100_reels">Latest 100 TikToks</option>
+                      <option value="200_reels">Latest 200 TikToks</option>
+                      <option value="1000_reels">Latest 1K TikToks</option>
+                      <option value="all_reels">All TikToks</option>
+                    </select>
+                    <select class="sf-hidden-select" id="dates_selected_tiktok" active="off" data-items-noun="TikToks">
+                      <option value="1_week" selected>TikToks from 1 Week Back</option>
+                      <option value="1_month">TikToks from 1 Month Back</option>
+                      <option value="3_month">TikToks from 3 Months Back</option>
+                      <option value="6_month">TikToks from 6 Months Back</option>
+                      <option value="1_year">TikToks from 1 Year Back</option>
+                      <option value="all_reels">All TikToks</option>
+                    </select>
+
+                    <!-- Custom dropdown: TikTok items -->
+                    <div class="sf-dd" id="sf-dd-tt-items">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Latest 25 TikToks</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 TikToks</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel" aria-hidden="true">
+                          <div class="sf-dd-custom-title">Set custom number of tiktoks</div>
+                          <input type="number" min="1" max="10000" step="1" inputmode="numeric"
+                                 class="sf-dd-custom-input" placeholder="e.g. 347" />
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Custom dropdown: TikTok dates -->
+                    <div class="sf-dd" id="sf-dd-tt-dates" style="display:none;">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">TikToks from 1 Week Back</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="1_week">TikToks from 1 Week Back</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>TikToks from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>TikToks from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>TikToks from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>TikToks from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel sf-dd-custom-panel-date" aria-hidden="true">
+                          <div class="sf-dd-custom-title">
+                            Set date range
+                            <span class="sf-date-status"></span>
+                          </div>
+                          <div class="sf-cal">
+                            <div class="sf-cal-head">
+                              <button type="button" class="sf-cal-nav sf-cal-prev" aria-label="Previous month"></button>
+                              <span class="sf-cal-title"></span>
+                              <button type="button" class="sf-cal-nav sf-cal-next" aria-label="Next month"></button>
+                            </div>
+                            <div class="sf-cal-dow">
+                              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                            </div>
+                            <div class="sf-cal-grid"></div>
+                          </div>
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider between sections -->
+
+                <!-- Sort by section -->
+                <div class="sf-sort-inner-section sf-sort-inner-section--sort">
+                  <span class="sf-section-label">Sort by</span>
+                  <div class="sf-sort-card">
+                  <button id="sortLikesClickTikTok" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/LoveGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Likes</span>
+                    </div>
+                  </button>
+
+                  <button id="sortViewsClickTikTok" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/play.svg" style="width: 9px; margin-right: 12px;" />
+                      <span>Views</span>
+                    </div>
+                  </button>
+
+                  <!-- Outlier score — preview UI (INERT), gated by `outlierFlag` in popup.js.
+                       Hidden until `.TikTokMain` gets `.sf-outlier-on`. No click wiring yet —
+                       triggering on TikTok is handled in a later session. -->
+                  <button id="sortOutlierClickTikTok" class="SortButtonMain sf-outlier-btn">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <span class="sf-outlier-flame"></span>
+                      <span>Outlier score</span>
+                      <span class="sf-outlier-info-wrap">
+                        <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Outlier score"></span>
+                        <span class="sf-outlier-tooltip" role="tooltip">How many times more views a post got than usual. Higher means a bigger breakout.</span>
+                      </span>
+                    </div>
+                  </button>
+
+                  <button id="sortSharesClickTikTok" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/share.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Shares</span>
+                    </div>
+                  </button>
+
+                  <button id="sortCommentsClickTikTok" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/ChatGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Comments</span>
+                    </div>
+                  </button>
+
+                  <button id="sortSavesClickTikTok" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/med_save.svg" style="width: 9px; margin-right: 12px;" />
+                      <span>Saves</span>
+                    </div>
+                  </button>
+
+                  <button id="sortOldestClicksTikTok" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Oldest</span>
+                    </div>
+                  </button>
+                  </div>
+                </div>
+
+                <label class="OnlyWorksPosts" id="tiktokItemsWarning">Sorting only works on profile pages</label>
+              </div>
+
+            </div>
+          </div><!-- /ttSortContent -->
+
+          <!-- Settings subview (the old Actions panel) — see .InstaMain -->
+          <div id="ttDownloadContent" style="display: none; flex-direction: column; width: 100%;" aria-hidden="true">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+              <div class="buttonMainDiv sf-sort-unified">
+
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label sf-dl-head">
+                    Display
+                    <span class="sf-outlier-info-wrap sf-info-down">
+                      <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Display buttons"></span>
+                      <span class="sf-outlier-tooltip" role="tooltip">Adds a Download button to each video and post.</span>
+                    </span>
+                  </span>
+                  <div class="sf-sort-card">
+                    <div class="sf-dl-row sf-dl-row-last">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">
+                          Download button
+                        </div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="ttDownloadToggle" checked>
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                    <div class="sf-dl-row" style="display:none !important;">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">Transcribe button</div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="ttTranscribeToggle">
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div><!-- /TikTokMain -->
+
+          <!-- FACEBOOK (Beta) -->
+          <div class="FacebookMain sf-fade-content" style="display: none;">
+
+          <!-- No Sort/Actions segmented control (see .InstaMain): Sort is the
+               only landing view and Actions lives behind the header gear. -->
+
+          <!-- Sort panel -->
+          <div id="fbSortContent" style="display: flex; flex-direction: column; width: 100%;">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+
+              <!-- Single unified box -->
+              <div id="facebook_sort_menu" class="buttonMainDiv sf-sort-unified">
+
+                <!-- Filter by section -->
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label">Filters</span>
+                  <div class="segmented-control sf-sort-seg">
+                    <button class="itemButtonClass" id="itemButtonFacebook">
+                      <img src="Icons/gridNofill.svg" class="sf-tab-icon"> Posts
+                    </button>
+                    <button class="dateRangeButtonClass" id="dateRangeButtonFacebook">
+                      <img src="Icons/popupIcons/calenderPopup.svg" class="sf-tab-icon"> Date
+                    </button>
+                  </div>
+                  <div class="sf-sort-dd-row">
+                    <!-- Hidden selects — JS reads .value / active attr from these -->
+                    <select class="sf-hidden-select" id="no_reels_selected_facebook" active="on" data-items-noun="Posts">
+                      <option value="25_reels" selected>Latest 25 Posts</option>
+                      <option value="50_reels">Latest 50 Posts</option>
+                      <option value="100_reels">Latest 100 Posts</option>
+                      <option value="200_reels">Latest 200 Posts</option>
+                      <option value="1000_reels">Latest 1K Posts</option>
+                      <option value="all_reels">All Posts</option>
+                    </select>
+                    <select class="sf-hidden-select" id="dates_selected_facebook" active="off" data-items-noun="Posts">
+                      <option value="1_week" selected>Posts from 1 Week Back</option>
+                      <option value="1_month">Posts from 1 Month Back</option>
+                      <option value="3_month">Posts from 3 Months Back</option>
+                      <option value="6_month">Posts from 6 Months Back</option>
+                      <option value="1_year">Posts from 1 Year Back</option>
+                      <option value="all_reels">All Posts</option>
+                    </select>
+
+                    <!-- Custom dropdown: FB items -->
+                    <div class="sf-dd" id="sf-dd-fb-items">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Latest 25 Posts</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 Posts</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel" aria-hidden="true">
+                          <div class="sf-dd-custom-title">Set custom number of posts</div>
+                          <input type="number" min="1" max="10000" step="1" inputmode="numeric"
+                                 class="sf-dd-custom-input" placeholder="e.g. 347" />
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Custom dropdown: FB dates -->
+                    <div class="sf-dd" id="sf-dd-fb-dates" style="display:none;">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Posts from 1 Week Back</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="1_week">Posts from 1 Week Back</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>Posts from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>Posts from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>Posts from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>Posts from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel sf-dd-custom-panel-date" aria-hidden="true">
+                          <div class="sf-dd-custom-title">
+                            Set date range
+                            <span class="sf-date-status"></span>
+                          </div>
+                          <div class="sf-cal">
+                            <div class="sf-cal-head">
+                              <button type="button" class="sf-cal-nav sf-cal-prev" aria-label="Previous month"></button>
+                              <span class="sf-cal-title"></span>
+                              <button type="button" class="sf-cal-nav sf-cal-next" aria-label="Next month"></button>
+                            </div>
+                            <div class="sf-cal-dow">
+                              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                            </div>
+                            <div class="sf-cal-grid"></div>
+                          </div>
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sort by section -->
+                <div class="sf-sort-inner-section sf-sort-inner-section--sort">
+                  <span class="sf-section-label">Sort by</span>
+                  <div class="sf-sort-card">
+                  <button id="sortLikesClickFacebook" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/LoveGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Likes</span>
+                    </div>
+                  </button>
+
+                  <button id="sortViewsClickFacebook" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/play.svg" style="width: 9px; margin-right: 12px;" />
+                      <span>Views</span>
+                    </div>
+                  </button>
+
+                  <!-- Outlier score — preview UI (INERT), gated by `outlierFlag` in popup.js.
+                       Hidden until `.FacebookMain` gets `.sf-outlier-on`. No click wiring yet —
+                       triggering on Facebook is handled in a later session. -->
+                  <button id="sortOutlierClickFacebook" class="SortButtonMain sf-outlier-btn">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <span class="sf-outlier-flame"></span>
+                      <span>Outlier score</span>
+                      <span class="sf-outlier-info-wrap">
+                        <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Outlier score"></span>
+                        <span class="sf-outlier-tooltip" role="tooltip">How many times more views a post got than usual. Higher means a bigger breakout.</span>
+                      </span>
+                    </div>
+                  </button>
+
+                  <button id="sortSharesClickFacebook" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/share.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Shares</span>
+                    </div>
+                  </button>
+
+                  <button id="sortCommentsClickFacebook" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/ChatGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Comments</span>
+                    </div>
+                  </button>
+
+                  <button id="sortOldestClicksFacebook" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Oldest</span>
+                    </div>
+                  </button>
+                  </div>
+                </div>
+
+                <label class="OnlyWorksPosts" id="OnlyWorksPostsFacebook" style="display: none;"></label>
+              </div>
+
+            </div>
+          </div><!-- /fbSortContent -->
+
+          <!-- Settings subview (the old Actions panel) — see .InstaMain -->
+          <div id="fbDownloadContent" style="display: none; flex-direction: column; width: 100%;" aria-hidden="true">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+              <div class="buttonMainDiv sf-sort-unified">
+
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label sf-dl-head">
+                    Display
+                    <span class="sf-outlier-info-wrap sf-info-down">
+                      <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Display buttons"></span>
+                      <span class="sf-outlier-tooltip" role="tooltip">Adds a Download button to each video and post.</span>
+                    </span>
+                  </span>
+                  <div class="sf-sort-card">
+                    <div class="sf-dl-row sf-dl-row-last">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">
+                          Download button
+                        </div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="fbDownloadToggle" checked>
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                    <div class="sf-dl-row" style="display:none !important;">
+                      <div class="sf-dl-info">
+                        <div class="sf-dl-title">Transcribe button</div>
+                      </div>
+                      <label class="sf-toggle">
+                        <input type="checkbox" class="sf-toggle-input" id="fbTranscribeToggle">
+                        <span class="sf-toggle-track"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div><!-- /FacebookMain -->
+
+          <!-- YOUTUBE (preview — fully inert, no content/background triggers) -->
+          <div class="YouTubeMain sf-fade-content" style="display: none;">
+
+          <!-- YouTube has Sort only — no Actions tab (transcription deferred). -->
+          <div id="ytSortContent" style="display: flex; flex-direction: column; width: 100%;">
+            <div class="insta_tiktok_menus" style="padding: 0 15px 10px;">
+
+              <!-- Single unified box. margin-top trimmed (6px vs the default 10px):
+                   YouTube has no Sort/Actions control above it, so the card seats
+                   snug under the header instead of leaving an empty band. -->
+              <div id="youtube_sort_menu" class="buttonMainDiv sf-sort-unified" style="margin-top: 6px;">
+
+                <!-- Filter by section -->
+                <div class="sf-sort-inner-section">
+                  <span class="sf-section-label">Filters</span>
+                  <div class="segmented-control sf-sort-seg">
+                    <button class="itemButtonClass" id="itemButtonYoutube">
+                      <img src="Icons/gridNofill.svg" class="sf-tab-icon"> Videos
+                    </button>
+                    <button class="dateRangeButtonClass" id="dateRangeButtonYoutube">
+                      <img src="Icons/popupIcons/calenderPopup.svg" class="sf-tab-icon"> Date
+                    </button>
+                  </div>
+                  <div class="sf-sort-dd-row">
+                    <!-- Hidden selects — JS reads .value / active attr from these -->
+                    <select class="sf-hidden-select" id="no_reels_selected_youtube" active="on" data-items-noun="Videos">
+                      <option value="25_reels" selected>Latest 25 Videos</option>
+                      <option value="50_reels">Latest 50 Videos</option>
+                      <option value="100_reels">Latest 100 Videos</option>
+                      <option value="200_reels">Latest 200 Videos</option>
+                      <option value="1000_reels">Latest 1K Videos</option>
+                      <option value="all_reels">All Videos</option>
+                    </select>
+                    <select class="sf-hidden-select" id="dates_selected_youtube" active="off" data-items-noun="Videos">
+                      <option value="1_week" selected>Videos from 1 Week Back</option>
+                      <option value="1_month">Videos from 1 Month Back</option>
+                      <option value="3_month">Videos from 3 Months Back</option>
+                      <option value="6_month">Videos from 6 Months Back</option>
+                      <option value="1_year">Videos from 1 Year Back</option>
+                      <option value="all_reels">All Videos</option>
+                    </select>
+
+                    <!-- Custom dropdown: YT items -->
+                    <div class="sf-dd" id="sf-dd-yt-items">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Latest 25 Videos</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 Videos</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel" aria-hidden="true">
+                          <div class="sf-dd-custom-title">Set custom number of videos</div>
+                          <input type="number" min="1" max="10000" step="1" inputmode="numeric"
+                                 class="sf-dd-custom-input" placeholder="e.g. 347" />
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Custom dropdown: YT dates -->
+                    <div class="sf-dd" id="sf-dd-yt-dates" style="display:none;">
+                      <button class="sf-dd-trigger" type="button">
+                        <span class="sf-dd-label">Videos from 1 Week Back</span>
+                        <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-arrow" />
+                      </button>
+                      <div class="sf-dd-menu" aria-hidden="true">
+                        <div class="sf-dd-options-list">
+                          <div class="sf-dd-opt sf-dd-selected" data-value="1_week">Videos from 1 Week Back</div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>Videos from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>Videos from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>Videos from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>Videos from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-divider"></div>
+                          <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
+                            <span class="sf-dd-opt-custom-left">
+                              <img src="Icons/pencil.svg" class="sf-dd-pencil" alt="" />
+                              <span class="sf-dd-opt-label">Custom…</span>
+                            </span>
+                            <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
+                          </div>
+                        </div>
+                        <div class="sf-dd-custom-panel sf-dd-custom-panel-date" aria-hidden="true">
+                          <div class="sf-dd-custom-title">
+                            Set date range
+                            <span class="sf-date-status"></span>
+                          </div>
+                          <div class="sf-cal">
+                            <div class="sf-cal-head">
+                              <button type="button" class="sf-cal-nav sf-cal-prev" aria-label="Previous month"></button>
+                              <span class="sf-cal-title"></span>
+                              <button type="button" class="sf-cal-nav sf-cal-next" aria-label="Next month"></button>
+                            </div>
+                            <div class="sf-cal-dow">
+                              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                            </div>
+                            <div class="sf-cal-grid"></div>
+                          </div>
+                          <div class="sf-dd-custom-error" aria-live="polite"></div>
+                          <div class="sf-dd-custom-actions">
+                            <button type="button" class="sf-dd-custom-cancel">Cancel</button>
+                            <button type="button" class="sf-dd-custom-accept" disabled>Accept</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sort by section -->
+                <div class="sf-sort-inner-section sf-sort-inner-section--sort">
+                  <span class="sf-section-label">Sort by</span>
+                  <div class="sf-sort-card">
+                  <button id="sortLikesClickYoutube" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/LoveGrey.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Likes</span>
+                    </div>
+                  </button>
+
+                  <button id="sortViewsClickYoutube" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/play.svg" style="width: 9px; margin-right: 12px;" />
+                      <span>Views</span>
+                    </div>
+                  </button>
+
+                  <!-- Outlier score — preview UI (INERT). Revealed when `.YouTubeMain`
+                       gets `.sf-outlier-on`; no click wiring (YouTube popup triggers nothing). -->
+                  <button id="sortOutlierClickYoutube" class="SortButtonMain sf-outlier-btn">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <span class="sf-outlier-flame"></span>
+                      <span>Outlier score</span>
+                      <span class="sf-outlier-info-wrap">
+                        <span class="sf-outlier-info" tabindex="0" role="img" aria-label="About Outlier score"></span>
+                        <span class="sf-outlier-tooltip" role="tooltip">How many times more views a video got than usual. Higher means a bigger breakout.</span>
+                      </span>
+                    </div>
+                  </button>
+
+                  <button id="sortOldestClicksYoutube" class="SortButtonMain">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <span>Oldest</span>
+                    </div>
+                  </button>
+                  </div>
+                </div>
+
+                <label class="OnlyWorksPosts" id="OnlyWorksPostsYoutube" style="display: none;"></label>
+              </div>
+
+            </div>
+          </div><!-- /ytSortContent -->
+      </div><!-- /YouTubeMain -->
+
+        </div>
+
+      </div>
+
+      <!-- FEEDRANK FOOTER -->
+      <!-- Hidden legacy placeholders to prevent JS errors -->
+      <div id="subFooter" style="display: none !important;"></div>
+      <div id="FreeFooter" style="display: none !important;"></div>
+      <div id="PaidFooter" style="display: none !important;"></div>
+      <div id="footerMenu" class="sf-menu sf-hidden" role="menu" aria-hidden="true" style="display: none !important;"></div>
+
+      <!-- New clean developer support footer -->
+      <div id="feedrankFooter" style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; align-self: stretch; padding: 12px 15px; border-top: 1px solid rgba(128,128,128,0.15); background: rgba(0,0,0,0.02);">
+        <a href="https://buymeatea.in/bytanmay" target="_blank" rel="noopener noreferrer"
+           id="feedrank-support-btn"
+           style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; box-sizing: border-box; padding: 10px 16px; border-radius: 8px;
+                  background: #ffd500; color: #111827 !important; text-decoration: none;
+                  font-size: 13px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  box-shadow: 0 2px 8px rgba(255, 213, 0, 0.35); border: none; cursor: pointer; text-align: center; transition: opacity 0.15s ease, transform 0.1s ease;">
+          <span style="font-size: 16px;">☕</span> Support Developer
+        </a>
+      </div>
+
+      <script src="popup_scripts/popup.js"></script>
+      <script src="popup_scripts/popup_subs.js"></script>
+    </div>
+  </div>
+</body>
+</html>

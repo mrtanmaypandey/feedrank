@@ -1,0 +1,179 @@
+@keyframes slideLeft {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .slide-left-animation {
+    animation: slideLeft 0.4s ease forwards;
+  }
+  
+  @keyframes slideRight {
+    from {
+      opacity: 0;
+      transform: translateX(-50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .slide-right-animation {
+    animation: slideRight 0.4s ease forwards;
+  }
+  
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+.input-container_sub {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    margin-top:6px;
+  }
+  
+.sucess_message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(83, 172, 121 / 10%);
+  border-bottom: solid rgb(83, 172, 121);
+}
+
+.sucess_text{
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color:#448A62; 
+}
+
+.input-icon_sub {
+  position: absolute;
+  top: 50%;
+  left: 23px;
+  transform: translateY(-50%) rotate(0deg);
+  /* transform: translateY(-50%) rotate(+30deg); */
+  width: 7px;
+  pointer-events: none;
+  opacity: 0.70;
+  transition: transform 0.3s ease;
+}
+
+/* .input-container_sub:hover .input-icon_sub {
+  transform: translateY(-50%) rotate(0deg);
+} */
+
+  /* .input-icon_sub {
+    position: absolute;
+    top: 50%;
+    left: 23px;
+    transform: translateY(-50%);
+    width: 7px;
+    pointer-events: none;
+    } */
+
+    /* .BackFromLicense {
+        font-weight: 400;
+        font-size: 10px;
+        color:rgb(51 65 85 / 60%);
+        padding-left: 15px;
+        cursor: pointer; 
+    } 
+
+    .BackFromLicense:hover {
+        opacity: 0.6;
+    } */
+
+  
+  .license-input_sub {
+    width: 100%;
+    padding: 10px 16px 10px 37px; /* left padding for icon */
+    color: #333;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 12px;
+    border-radius: 0.5rem;
+    --linaria-theme_palette-border-tertiary: #DDDDDD;
+    border: 1px solid var(--linaria-theme_palette-border-tertiary);
+    border-width: 1.5px;
+    --tw-border-opacity: 1;
+    border-color: rgb(209 213 219 / var(--tw-border-opacity));
+    --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+    /* box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow); */
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+    font-weight: 400;
+    letter-spacing: .009em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color:white;
+
+  }
+  
+  .license-input_sub::placeholder {
+    color: #b0b0b0;
+  }
+
+  .activate_pro_button {
+    font-size:12px;
+    margin-bottom: 10px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    color: black;
+    padding: 10px 20px;
+    cursor: pointer;
+    line-height: 1.1666666667;
+    font-weight: 500;
+    letter-spacing: .009em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* font-family: SF Pro Display,SF Pro Icons,Helvetica Neue,Helvetica,Arial,sans-serif; */
+    background-color:white;
+    /* transition: all 0.2sease-in-out; */
+    --linaria-theme_palette-border-tertiary: #DDDDDD;
+    /* border-bottom: 1px solid var(--linaria-theme_palette-border-tertiary); */
+    width: 100%;
+    /* border-left:0px;
+    border-right:0px;
+    border-top:0px; */
+    border-radius: 0.5rem;
+    --linaria-theme_palette-border-tertiary: #DDDDDD;
+    border: 1px solid var(--linaria-theme_palette-border-tertiary);
+    border-width: 1.5px;
+    --tw-border-opacity: 1;
+    border-color: rgb(209 213 219 / var(--tw-border-opacity));
+    --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+    background-color: #ffd500;
+    border: 1px solid #00000022;
+    cursor: pointer;
+    box-shadow: 
+    0px 1px 2px rgba(0, 0, 0, 0.06),
+    0px 3px 6px rgba(0, 0, 0, 0.05),
+    0px 0px 0px 1px rgba(255, 213, 0, 0.6);
+
+}
+.activate_pro_button:hover {
+  background-color: rgba(253, 224, 130, 0.8); /* More transparency */
+}
+
+.license_key_message{
+    font-weight: normal;
+    font-size: 9px;
+    margin-left: 11px;
+    margin-top: 6px;
+    letter-spacing: 0px;
+    color: #6b7280;
+    opacity: 85%;
+    }
+

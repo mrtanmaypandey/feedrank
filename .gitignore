@@ -1,0 +1,31 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Chrome extension build & metadata artifacts
+_metadata/
+*.crx
+*.pem
+
+# Editor / IDE configuration
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node & package files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Environment variables & local test files
+.env
+.env.local
+*.log

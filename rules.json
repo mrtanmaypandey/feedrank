@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        {
+          "header": "x-tiktok-api-call",
+          "operation": "set",
+          "value": "intercepted"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*/api/post/item_list/*",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  }
+]

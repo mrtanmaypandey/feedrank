@@ -1,0 +1,161 @@
+{
+  "manifest_version": 3,
+  "name": "FeedRank — Sort Any Social Feed",
+  "short_name": "FeedRank",
+  "description": "Sort Instagram Reels, Posts, TikTok, Facebook & YouTube by views, likes, comments, outliers or date. Export to Sheets & bulk download.",
+  "version": "1.0.0",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "declarativeNetRequest",
+    "webNavigation",
+    "storage",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.instagram.com/*",
+    "https://www.tiktok.com/*",
+    "https://www.facebook.com/*",
+    "https://www.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "Icons/icon-16.png",
+      "48": "Icons/icon-48.png",
+      "128": "Icons/icon-128.png"
+    }
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "tiktok_interceptor",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "icons": {
+    "16": "Icons/icon-16.png",
+    "48": "Icons/icon-48.png",
+    "128": "Icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "css": [
+        "Animate/animate.css",
+        "Instagram/save/save_button_instagram.css",
+        "shared/sf_banner_primitives.css"
+      ],
+      "js": [
+        "lib/xlsx.full.min.js",
+        "Instagram/content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.tiktok.com/*"
+      ],
+      "css": [
+        "Animate/animate.css",
+        "shared/sf_banner_primitives.css"
+      ],
+      "js": [
+        "lib/xlsx.full.min.js",
+        "Tiktok/content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "https://www.facebook.com/*"
+      ],
+      "css": [
+        "shared/sf_banner_primitives.css"
+      ],
+      "js": [
+        "lib/xlsx.full.min.js",
+        "Facebook/content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "css": [
+        "Animate/animate.css",
+        "shared/sf_banner_primitives.css"
+      ],
+      "js": [
+        "lib/xlsx.full.min.js",
+        "YouTube/content.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.instagram.com/*"
+      ],
+      "js": [
+        "Instagram/script_instagram.js",
+        "Instagram/explore_sort_instagram.js",
+        "Instagram/saved_sort_instagram.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "Icons/*.png",
+        "Icons/*.svg",
+        "Icons/sf/*.svg",
+        "Icons/BannerIcons/*.png",
+        "Icons/BannerIconNew/*.svg",
+        "Icons/ButtonIcons/*.svg",
+        "Icons/popupIcons/*.svg",
+        "Icons/Hover/*.png",
+        "Icons/ZeroStateIcons/*",
+        "Instagram/script_instagram.js",
+        "Instagram/explore_sort_instagram.js",
+        "Instagram/saved_sort_instagram.js",
+        "Tiktok/script_tiktok.js",
+        "Tiktok/search/search_sort_tiktok.js",
+        "Tiktok/saved/saved_sort_tiktok.js",
+        "YouTube/script_youtube.js"
+      ],
+      "matches": [
+        "https://www.instagram.com/*",
+        "https://www.tiktok.com/*",
+        "https://www.youtube.com/*"
+      ]
+    },
+    {
+      "resources": [
+        "Facebook/script_facebook.js",
+        "Icons/*.png",
+        "Icons/*.svg",
+        "Icons/sf/*.svg",
+        "Icons/BannerIconNew/*.svg",
+        "Icons/BannerIcons/*.png",
+        "Icons/ButtonIcons/*.svg",
+        "Icons/popupIcons/*.svg",
+        "Icons/Hover/*.png",
+        "Icons/ZeroStateIcons/*"
+      ],
+      "matches": [
+        "https://www.facebook.com/*"
+      ]
+    }
+  ]
+}

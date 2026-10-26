@@ -1,0 +1,218 @@
+/* ============================================================================
+   FeedRank — Instagram Styles
+   ============================================================================ */
+
+.sf-save-btn,
+.sf-save-row,
+.sf-save-grid,
+.sf-save-sp,
+#sf-similar-native,
+.sf-similar-menu,
+.sf-similar-act,
+.sf-similar-xmenu,
+.sf-sp-btn-trans,
+#sf-player-overlay .sf-pl-omenu-item[data-sf-action="transcribe"] {
+  display: none !important;
+}
+
+html.sf-save-off .sf-save-btn,
+html.sf-save-off .sf-save-row { display: none !important; }
+
+.sf-save-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: opacity 180ms ease;
+  pointer-events: auto;
+  outline: none;
+}
+.sf-save-btn:hover,
+.sf-save-btn.sf-saved { opacity: 1; }
+.sf-save-btn:focus-visible .sf-save-square { box-shadow: 0 0 0 2px #ffd500; }
+
+.sf-save-square {
+  position: relative;
+  box-sizing: border-box;
+  width: 19px;
+  height: 19px;
+  border-radius: 3px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 200ms ease;
+}
+/* Single post / reels feed: the translucent square those buttons use */
+.sf-save-sp { opacity: 0.8; }
+.sf-save-sp .sf-save-square { background: rgba(255, 255, 255, 0.72); }
+
+.sf-save-btn.sf-saved .sf-save-square { background: #ffd500; }
+
+/* 12px tall, tight viewBox, in the same 19px square (less padding than the
+   9px PNG icons) — an outline glyph reads small at the PNGs' size */
+.sf-save-glyph {
+  display: block;
+  width: 7.86px;
+  height: 12px;
+  overflow: visible;
+}
+.sf-save-out {
+  fill: #000;
+  stroke: #000;
+  stroke-width: 0.14;
+  stroke-linejoin: round;
+}
+.sf-save-fill {
+  fill: #6B4E00;
+  stroke: #6B4E00;
+  stroke-width: 0.14;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: scale(0.5);
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+}
+.sf-save-btn.sf-saved .sf-save-out { opacity: 0; }
+.sf-save-btn.sf-saved .sf-save-fill {
+  opacity: 1;
+  transform: scale(1);
+  transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 120ms ease;
+}
+
+/* Click motion: pop on save, a soft fade-swap on remove */
+.sf-save-btn.sf-save-pop .sf-save-square { animation: sfSavePop 0.32s cubic-bezier(0.2, 0, 0, 1); }
+.sf-save-btn.sf-save-unsaving .sf-save-out { animation: sfSaveIconSwap 0.2s ease forwards; }
+@keyframes sfSavePop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+@keyframes sfSaveIconSwap {
+  0%   { opacity: 0.4; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Sparkle burst — AdScoop's, in Sort Feed's yellows */
+.sf-save-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 20;
+  animation: sfSaveSparkle 0.6s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+@keyframes sfSaveSparkle {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--sf-tx), var(--sf-ty)) scale(0); }
+}
+
+/* Tooltip — the sorted tiles' black tip, plus a Beta pill. On the unsorted
+   grid the button also carries .sf-hover-tip, whose later rules win, so the
+   tip matches its neighbours there. */
+.sf-save-tip {
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  transform: translate(-100%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #000;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 99999;
+  transition: opacity 120ms ease;
+}
+.sf-save-btn:hover .sf-save-tip { opacity: 1; }
+.sf-save-beta {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+/* The hover glyphs are SF Symbols (Icons/sf, E2): the waveform for Transcribe and
+   arrow.down.to.line for Download, 15px in the same 19px box. The unsorted
+   grid's <img>s come from the LOCKED hover_buttons_instagram.js, so their sources
+   are swapped here with `content` instead of editing that file. */
+.sf-hover-btn img[src$="Hover/trans.png"] {
+  content: url("chrome-extension://__MSG_@@extension_id__/Icons/sf/transcribe.svg");
+}
+.sf-hover-btn img[src$="Hover/arrowDownBlack.png"] {
+  content: url("chrome-extension://__MSG_@@extension_id__/Icons/sf/download.svg");
+}
+.sf-hover-btn img[src$="Hover/trans.png"],
+.sf-hover-btn img[src$="Hover/arrowDownBlack.png"],
+.sf-sp-btn img[src$="sf/transcribe.svg"] {
+  width: 15px;
+  height: 15px;
+  padding: 2px;
+}
+
+/* ── Player rail row (sf_player_core.js builds it, bindRow() takes it over) ──
+   At rest the bookmark is one more rail glyph (--sf-glyph, no fill behind it);
+   saved, the tiles' 19px square fills #fde082 with the #6B4E00 bookmark, with
+   the same pop + sparkles. The square overhangs the 13px icon slot by 3px a
+   side so the glyph lines up with the icons in the rows below. */
+#sf-player-overlay .sf-save-row .sf-pl-ico { overflow: visible; }
+/* Pinned to the tile square's exact box — 19×19, 12px bookmark, 3.5px above
+   and below — with !important: inside the 13px icon slot of a <button> on
+   instagram.com the square was squeezed and the bookmark grew, so the yellow
+   chip read tighter top and bottom than the tiles' one. */
+#sf-player-overlay .sf-save-row .sf-save-square {
+  flex: 0 0 19px !important;
+  width: 19px !important;
+  height: 19px !important;
+  min-width: 19px !important;
+  min-height: 19px !important;
+  padding: 0 !important;
+  border-radius: 3px !important;
+  line-height: 0 !important;
+  background: transparent;
+}
+/* the player sizes every svg to its box; keep the tiles' 12px bookmark */
+#sf-player-overlay .sf-save-row .sf-save-glyph {
+  flex: none !important;
+  width: 7.86px !important;
+  height: 12px !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible;
+}
+#sf-player-overlay .sf-save-row .sf-save-out {
+  fill: currentColor;
+  stroke: currentColor;
+}
+#sf-player-overlay .sf-save-row.sf-saved .sf-save-square { background: #ffd500; }
+#sf-player-overlay .sf-save-row.sf-saved .sf-save-out { opacity: 0; }
+#sf-player-overlay .sf-save-row.sf-saved .sf-save-fill {
+  opacity: 1;
+  transform: scale(1);
+  transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 120ms ease;
+}
+#sf-player-overlay .sf-save-row.sf-save-pop .sf-save-square { animation: sfSavePop 0.32s cubic-bezier(0.2, 0, 0, 1); }
+#sf-player-overlay .sf-save-row.sf-save-unsaving .sf-save-out { animation: sfSaveIconSwap 0.2s ease forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-save-btn.sf-save-pop .sf-save-square,
+  .sf-save-btn.sf-save-unsaving .sf-save-out,
+  #sf-player-overlay .sf-save-row.sf-save-pop .sf-save-square,
+  #sf-player-overlay .sf-save-row.sf-save-unsaving .sf-save-out { animation: none; }
+}

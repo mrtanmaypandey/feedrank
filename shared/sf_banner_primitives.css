@@ -1,0 +1,504 @@
+/* ============================================================================
+   Sort Feed — shared banner primitives
+   Used by download, transcribe, google sheets, and future banners.
+   The legacy .sort-banner keeps its own styles (defined in banner_on_insta.js
+   and banner_on_tiktok.js) and is NOT affected by anything here.
+   ============================================================================ */
+
+/* Enter — slide down from above with subtle elastic overshoot */
+@keyframes sfSlideBounceDown {
+  0%   { transform: translateY(-120%); opacity: 0; }
+  60%  { transform: translateY(10px);  opacity: 1; }
+  80%  { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+/* Exit — mirrors the entry */
+@keyframes sfSlideBounceUp {
+  0%   { transform: translateY(0);     opacity: 1; }
+  20%  { transform: translateY(-10px); }
+  100% { transform: translateY(-120%); opacity: 0; }
+}
+
+/* Subtle logo bounce — -6px peak, 0.4s loop */
+@keyframes sfBounceLogo {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* Copy button spring-in after the icon swap */
+@keyframes sfCopySpringIn {
+  0%   { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ----------------------------------------------------------------------------
+   Banner base — every banner family applies this class plus a family class
+   (.sf-download-banner / .sf-trans-banner / .sf-gsheets-banner) and a state
+   class (.sf-progress / .sf-ready / .sf-error / ...).
+   ---------------------------------------------------------------------------- */
+.sf-banner {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  padding: 12px 16px;
+  padding-right: 36px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  animation: sfSlideBounceDown 0.25s ease;
+  /* Prefer the OS UI font (SF Pro on macOS, Segoe UI on Windows) — plain
+     "SF Pro Display" string doesn't resolve on Mac; -apple-system does. */
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.sf-banner .sf-icon {
+  padding: 4px;
+  width: 1.1rem !important;
+  height: auto !important;
+  flex-shrink: 0;
+  animation: sfBounceLogo 0.4s ease-in-out infinite;
+}
+
+/* Per-platform icon sizing — pixel values because IG and TikTok set different
+   root font-sizes, so rem values render at different absolute sizes. */
+.sf-on-ig .sf-banner .sf-icon { width: 22px !important; }
+.sf-on-tk .sf-banner .sf-icon { width: 28px !important; }
+
+/* Freeze the logo on ready/error states */
+.sf-banner.sf-static .sf-icon,
+.sf-banner .sf-icon.sf-static {
+  animation: none;
+}
+
+.sf-banner .sf-message {
+  font-size: 16px;
+  font-weight: 500;
+  color: #37352f; /* Notion's standard body text (warm near-black) */
+  flex-grow: 1;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.sf-banner .sf-subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(55, 53, 47, 0.55); /* Notion secondary text alpha on same base */
+  margin-top: 4px;
+  line-height: 1.45;
+  letter-spacing: -0.005em;
+}
+
+/* Body wrapper — some banners (progress with subtitle + bar) need a column
+   layout next to the icon. */
+.sf-banner .sf-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   Progress bar — yellow fill
+   ---------------------------------------------------------------------------- */
+.sf-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.sf-progress-track {
+  flex-grow: 1;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.sf-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #ffd500;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.sf-progress-pct {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.45);
+  min-width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------------------------
+   Close button — always visible, top-right corner
+   ---------------------------------------------------------------------------- */
+.sf-banner-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+  z-index: 2;
+}
+.sf-banner-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* Notion-style tooltip — used by both the × close and the circular stop
+   button. Renders below the button anchored to its right edge. */
+.sf-banner-close-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(15, 15, 15, 0.9);
+  color: rgba(255, 255, 255, 0.95);
+  padding: 5px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 1000;
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sf-banner-close:hover .sf-banner-close-tooltip,
+.sf-banner-close:focus-visible .sf-banner-close-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stop button tooltip renders to the LEFT of the button (lots of banner
+   whitespace there) instead of below. */
+.sf-banner-stop .sf-banner-close-tooltip {
+  top: 50%;
+  bottom: auto;
+  right: calc(100% + 8px);
+  transform: translate(4px, -50%);
+}
+.sf-banner-stop:hover .sf-banner-close-tooltip,
+.sf-banner-stop:focus-visible .sf-banner-close-tooltip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* ----------------------------------------------------------------------------
+   Stop button — circular gray affordance with a small dark square, used by
+   the sort-in-progress banner. Sits in the same top-right corner as × but
+   reads as "stop" rather than "close."
+   ---------------------------------------------------------------------------- */
+.sf-banner-stop {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  /* Warm Notion grey (tied to the #37352f text color) — matches the rest of
+     the palette better than a neutral cool grey. */
+  background: rgba(55, 53, 47, 0.08);
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: inherit;
+  transition: background 0.15s ease;
+  z-index: 2;
+}
+.sf-banner-stop:hover {
+  background: rgba(55, 53, 47, 0.14);
+}
+.sf-banner-stop-square {
+  display: block;
+  width: 8px;
+  height: 8px;
+  /* Warmer near-black with a brown undertone — ties to the amber progress
+     bar (#F59E0B) rather than reading as cool/neutral black. */
+  background: #3d2e20;
+  border-radius: 1.5px;
+  transition: background 0.15s ease;
+}
+
+/* ----------------------------------------------------------------------------
+   Copy button — icon + "Copy" label, light gray pill
+   ---------------------------------------------------------------------------- */
+.sf-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #37352f; /* Notion warm black — matches banner title */
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.sf-copy-btn:hover {
+  background: #fafafa;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+.sf-copy-btn img {
+  height: 0.95rem;
+  width: auto;
+  display: block;
+  /* Use filter so the spring-in keyframe (which animates CSS opacity 0→1)
+     doesn't override the subtle tone — the check then matches the copy icon. */
+  filter: opacity(0.5);
+}
+.sf-copy-btn:hover img { filter: opacity(0.7); }
+
+/* Fading-out state during icon swap */
+.sf-copy-btn--fading img,
+.sf-copy-btn--fading span {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+/* Post-swap state — check icon springs in. The pill stays clickable so a
+   second action (copy again, or download after copying) still works. */
+.sf-copy-btn--copied img,
+.sf-copy-btn--copied span {
+  animation: sfCopySpringIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ----------------------------------------------------------------------------
+   Ready-banner countdown fill — subtle "this will auto-dismiss" cue
+   ---------------------------------------------------------------------------- */
+@keyframes sfReadyFill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+.sf-trans-ready-fill,
+.sf-gsheets-ready-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: rgba(0, 0, 0, 0.025);
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+  animation: sfReadyFill 15s linear forwards;
+}
+.sf-banner.sf-ready { overflow: hidden; }
+/* Sit content above the ready-fill, but don't clobber the absolutely-positioned
+   close button — it stays pinned to the top-right corner. */
+.sf-banner.sf-ready > :not(.sf-trans-ready-fill):not(.sf-gsheets-ready-fill):not(.sf-banner-close) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ----------------------------------------------------------------------------
+   Transcript ready banner — AdScoop-style header + snippet layout
+   Padding drops to symmetric 16px so the snippet row can span the full inner
+   width; the header gets its own right-padding to clear the close button.
+   ---------------------------------------------------------------------------- */
+.sf-trans-banner.sf-ready {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding-right: 16px;
+}
+
+.sf-trans-ready-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 24px; /* avoid running under the absolute close button */
+}
+
+.sf-trans-snippet-row {
+  margin-top: 12px;
+  display: flex;
+}
+
+.sf-trans-snippet {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 0;
+  border-radius: 6px;
+  min-width: 0;
+}
+
+.sf-trans-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Action row under the snippet — Copy · Copy with timestamps · Download .txt.
+   Right-aligned; wraps on narrow viewports so labels never ellipsize. */
+.sf-trans-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* The ready banner auto-dismisses on a 15s countdown. Now that saving the
+   file is a click rather than automatic, hold the countdown while the pointer
+   is over the card so the actions can't vanish mid-decision. */
+.sf-trans-banner.sf-ready:hover .sf-trans-ready-fill {
+  animation-play-state: paused;
+}
+
+/* When the snippet is empty, collapse gracefully — the ready banner still
+   shows the header + action row, just no snippet row. */
+.sf-trans-banner.sf-ready.sf-no-snippet .sf-trans-ready-top {
+  align-items: center;
+}
+
+/* ----------------------------------------------------------------------------
+   Sign-in button primitive — used by the gsheets signin banner
+   ---------------------------------------------------------------------------- */
+.sf-signin-btn {
+  font-size: 13px;
+  color: #ffffff;
+  background: #37352f;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 6px 12px;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.sf-signin-btn:hover { background: #1a1a1a; }
+
+/* ----------------------------------------------------------------------------
+   Get Pro button primitive — used by upgrade-to-pro banners
+   ---------------------------------------------------------------------------- */
+.sf-pro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #ffffff;
+  background: #37352f;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  /* Fixed box — the button must measure the same on every copy variant. */
+  height: 28px;
+  padding: 0 12px;
+  line-height: 1;
+  white-space: nowrap;
+  font-family: inherit;
+  flex-shrink: 0;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.sf-pro-btn:hover { background: #1a1a1a; }
+.sf-pro-btn img {
+  width: 11px;
+  height: auto;
+  filter: invert(1);
+  display: block;
+}
+
+/* ----------------------------------------------------------------------------
+   Upgrade banner — one geometry for every copy variant
+   The default line ("Unlock 500 min/month …") is the reference. Longer
+   variants ("7 Posts selected — Download selected media with Pro") used to
+   wrap to a second line near the 600px cap and grow the card; they now stay
+   on one line and ellipsize instead, so every Pro banner is the same height
+   with the same Get Pro button.
+   ---------------------------------------------------------------------------- */
+.sf-upgrade-banner { min-height: 54px; }
+.sf-upgrade-banner .sf-message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Two-line upsell (showUpsellBanner — legacy transcription limit, Similar's
+   lifetime toast): lifts the one-line rule for this banner only; each line
+   still ellipsizes on its own and the second line is smaller and muted. */
+.sf-upgrade-banner.sf-upsell-two-line .sf-message { white-space: normal; }
+.sf-upgrade-banner.sf-upsell-two-line .sf-message > span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sf-upgrade-banner.sf-upsell-two-line .sf-message > span + span {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(55, 53, 47, 0.65);
+}
+
+/* ----------------------------------------------------------------------------
+   Small-screen tuning
+   ---------------------------------------------------------------------------- */
+@media (max-width: 400px) {
+  .sf-banner { padding: 10px 12px; padding-right: 32px; }
+  .sf-banner .sf-message { font-size: 14px; }
+}
+
+/* ── Sort Feed logo visibility, ALL PLATFORMS (no .sf-on-* gate: FB/YT ride
+   the sf-on-ig tag, TikTok joined 2026-08-24).
+   Hidden while something is in flight or just landed: every DOWNLOAD banner
+   (single, batch, ZIP, error) and the TRANSCRIBE family's live states — the
+   progress bar (single transcriptions and Select missions) and the
+   transcript-ready card.
+   Shown, frozen, on the transcribe family's static notices — limit, errors,
+   the mission partial-failure summary, the Select cap and the signed-out
+   sign-in banner — so they read as Sort Feed speaking, not a bare toast.
+   Sort, Google Sheets and Pro banners keep the logo as before. ── */
+.sf-download-banner .sf-icon,
+.sf-trans-banner.sf-progress .sf-icon,
+.sf-trans-banner.sf-ready .sf-icon { display: none; }
+
+/* Opt-in: a ready banner that adds .sf-with-logo (IG's transcript-ready card)
+   keeps the frozen logo next to its title — same size and tone as the error,
+   limit and Pro banners. */
+.sf-trans-banner.sf-ready.sf-with-logo .sf-icon { display: block; }

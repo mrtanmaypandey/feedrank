@@ -1,0 +1,3173 @@
+:root {
+  /* Notion-style neutral tokens (light popup, no dark mode) */
+  --text-secondary: #6b6b6b; /* muted label text */
+  --text-muted: #9a9a9a;     /* faintest — trailing arrows, meta */
+}
+
+html {
+  background-color: #ffffff;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff; /* solid white backdrop for all popup views (never transparent) */
+  /* height: 100vh; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* width: 348px; */
+}
+
+.main_div {
+  --animate-duration: 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+
+  /* ⚠️ Load-bearing, and the popup's single guard against horizontal overflow.
+     A Chrome popup sizes its window to the document and NEVER shrinks back, so
+     anything poking past the right edge — even for one frame, even at opacity 0
+     — permanently blows the popup out to its 800px max and strands the content
+     in white space.
+
+     The warning/success banners (showPopupWarning, show_sucess_banner, …) are
+     injected here as `position: absolute; width: 100%`. With no positioned
+     ancestor their containing block was the VIEWPORT, so (a) `width: 100%` sized
+     them to the window rather than the popup and (b) nothing could clip them —
+     animate__bounceInRight opens at translate3d(3000px,0,0), which pushed the
+     document to ~3450px. Anchoring them here fixes the width AND brings them
+     inside a box that clips the travel. Also catches .slide-left/right-animation
+     (±50px) and the Settings panel swap.
+
+     x only: dropdown menus, tooltips and the footer ••• menu all overflow
+     up/down and must keep doing so. Nothing in the popup paints outside
+     0–300px horizontally, so the clip costs nothing. */
+  position: relative;
+  overflow-x: clip;
+}
+
+@keyframes notionFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sf-fade-header {
+  animation: notionFadeUp 0.25s ease-out both;
+}
+
+.sf-fade-content {
+  animation: notionFadeUp 0.3s ease-out 0.05s both;
+}
+
+.sf-fade-footer {
+  animation: notionFadeUp 0.3s ease-out both;
+}
+
+/* The feature banner sits between the header and the card, so it rises with
+   them on open. No delay, unlike .sf-fade-content: the banner is only shown
+   once feature_banner() has decided it should be, which is a tick after the
+   rest of the popup paints, and the extra 0.05s made it arrive visibly last. */
+.sf-fade-banner {
+  animation: notionFadeUp 0.3s ease-out both;
+}
+
+.sf-fade-only-works {
+  animation: notionFadeUp 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.chrome {
+  margin: 0;
+  overflow: visible;
+  /* min-height: 200px; */
+  min-width: 300px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.hero {
+  max-width: 300px;
+  height: auto;
+}
+
+.beta-tag {
+  position: relative;
+  left: 4px;
+  --tw-text-opacity: 0.7;
+  color: #999;
+  font-weight: 400;
+  --tw-bg-opacity: 1;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+  padding-top: 0rem;
+  padding-bottom: 0rem;
+  font-size: 0.5rem;
+  line-height: 1rem;
+  /* padding: 2px 6px; */
+  border: 0.9px solid #ddd;
+  border-radius: 0.25rem;
+  /* background-color: white; */
+}
+
+/* Single pill wrapping all zero-state feed buttons */
+.zeroStateButtonGroup {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.zeroStateButtonMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  color: #1a1a1a;
+  padding: 11px 14px;
+  cursor: pointer;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.009em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: transparent;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 0;
+  transition: background-color 0.13s ease;
+}
+
+.zeroStateButtonMain:last-child {
+  border-bottom: none;
+}
+
+.zeroStateButtonMain:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.zeroStateButtonMain:active {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.zeroStateButtonLabel {
+  display: flex;
+  align-items: center;
+}
+
+/* Fixed icon column so all feed labels align */
+.zs-feed-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+  width: 18px;
+  margin-right: 11px;
+}
+
+.zs-feed-icon img {
+  display: block;
+}
+
+/* Chevron — static, identical across all feeds (no hover animation).
+   Sized here rather than inline on each <img> so there's one knob. The source
+   SVG is 103×177, so width drives a height ~1.72× larger: 4.5px reads as ~7.7px
+   tall, which sits below the 12–15px feed icons instead of towering over them. */
+.zeroStateButtonMain > img {
+  width: 4.5px;
+  opacity: 0.3;
+}
+
+/* Notion-style Beta tag */
+.zs-beta-tag {
+  display: inline-block;
+  margin-left: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.42);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+/* Notion-style New tag (zero-state YouTube row) — same badge as .zs-beta-tag */
+.zs-new-tag {
+  display: inline-block;
+  margin-left: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.42);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+
+.subscribe_button {
+  font-size: 12px;
+  background-color: #ffd500;
+  border: 1px solid #00000022;
+  cursor: pointer;
+  box-shadow:
+    0px 1px 2px rgba(0, 0, 0, 0.06),
+    0px 3px 6px rgba(0, 0, 0, 0.05),
+    0px 0px 0px 1px rgba(255, 213, 0, 0.6);
+  transition: box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  color: black;
+  padding: 10px 20px;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  line-height: 1.1666666667;
+  font-weight: 500;
+  letter-spacing: 0.009em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --linaria-theme_palette-border-tertiary: #DDDDDD;
+  border-radius: 0.5rem;
+  gap: 2px;
+}
+
+.subscribe_button:hover {
+  background-color: rgba(253, 224, 130, 0.8);
+}
+
+/* Free/signed-out footer treatment — all platforms + zero-state (the footer is
+   one shared element shown by user state). Drop the yellow "Get Pro" button; the
+   upgrade nudge lives in the dropdowns now. Keeps just the "Have Pro?
+   Sign in →" link. The pro footer (#PaidFooter) is untouched — and free-signed-in
+   users now see #PaidFooter too (see show_footer_based_on_state). */
+#subFooter .subscribe_button,
+#FreeFooter .subscribe_button {
+  display: none;
+}
+
+/* Signed-out (#subFooter) goes white — everywhere EXCEPT zero-state, which keeps
+   the original grey banner (just without the Get Pro button). #PaidFooter stays
+   grey (rgb(246,246,246)), so signed-in free + pro users keep the grey footer. */
+body:not(.sf-zero-state) #subFooter,
+body:not(.sf-zero-state) #FreeFooter {
+  background-color: #ffffff;
+}
+
+/* Soften the sign-in link text — drop the medium weight and lighten it toward
+   the surrounding label (#8b8b8b) so it no longer bolds out, while staying
+   legible via its arrow + hover. Scoped to the free footers (so the pro footer
+   is unaffected) and off in zero-state, which restores the original link. */
+body:not(.sf-zero-state) #subFooter .enter-key,
+body:not(.sf-zero-state) #FreeFooter .enter-key {
+  color: #858585;
+  font-weight: 400;
+}
+
+/* Subtle Notion-style hover — Notion's ink (#37352f) at low alpha reads
+   softer/warmer than a flat grey and sits gently on the now-white footer. */
+body:not(.sf-zero-state) #subFooter .enter-key:hover,
+body:not(.sf-zero-state) #FreeFooter .enter-key:hover {
+  background-color: rgba(55, 53, 47, 0.05);
+  transform: none;
+}
+
+.subscribe_bottom_text {
+  text-align: center;
+  font-size: 18px;
+  margin-top: 20px;
+  color: black;
+  font-weight: 400;
+}
+
+.enter-key {
+  cursor: pointer;
+  text-decoration: none;
+  color: #7b7b7b;
+  font-weight: 500;
+  padding: 4px 7px;
+  border-radius: 5px;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+}
+
+.enter-key:hover {
+  background-color: #e7eaee;
+  transform: translateY(-0.5px);
+}
+
+.footer-text-link {
+  color: rgb(51 65 85 / 90%);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.footer-text-link:hover {
+  text-decoration: underline;
+}
+
+.footer-text-link-feature {
+  color: rgb(51 65 85 / 90%);
+  font-weight: 600;
+}
+
+
+.SortButtonMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  color: black;
+  padding: 10px 20px;
+  cursor: pointer;
+  width: 100%;
+  line-height: 1.1666666667;
+  font-weight: 500;
+  letter-spacing: 0.009em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: transparent;
+  --linaria-theme_palette-border-tertiary: #DDDDDD;
+  border-bottom: 1px solid var(--linaria-theme_palette-border-tertiary);
+  width: 100%;
+  border-left: 0px;
+  border-right: 0px;
+  border-top: 0px;
+}
+
+.SortButtonMain:hover {
+  color: #393e41;
+  background: #f6f7f8;
+  border-radius: 6px;
+}
+
+.footer {
+  color: #6d758d;
+  font-size: 14px;
+  line-height: 1.28577;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: -0.016em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.heading {
+  font-size: 1.5rem;
+  line-height: 2.8rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding-left: 6px;
+}
+
+.heading_two {
+  text-align: center;
+  font-size: 4rem;
+  line-height: 2.8rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding-top: 5px;
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
+.reels_title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reels_title_text {
+  color: #ffb900;
+}
+
+.sub-heading-div {
+  text-align: center;
+}
+
+.sub-heading_one {
+  font-size: 15px;
+  font-weight: 350;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin-bottom: 0;
+  color: rgb(51 65 85 / 50%);
+}
+
+.sub-heading_two {
+  margin-top: 0;
+  font-size: 15px;
+  font-weight: 350;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgb(51 65 85 / 50%);
+}
+
+.warning_message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(227 94 105 / 10%);
+  border-bottom: 1px solid rgba(227, 94, 105, 0.2);
+}
+
+.warning_text {
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #a32d36;
+}
+
+/* Re-sorted confirmation — same shape, entrance and exit as .warning_message,
+   only the palette differs. A back-to-back sort re-shuffles the grid without
+   reloading the page, so without a word here the click has no acknowledgement
+   at all. It's routine, though, so it stays quieter than both the red warning
+   and the green Pro banner: near-white ground, hairline rule, Notion ink.
+
+   ⚠️ The background MUST be opaque. It overlays the header, and a translucent
+   ground (rgba(0,0,0,0.03) was the first try) lets the logo, the Free/Pro tag
+   and the gear read straight through it — the banner is on top, it just isn't
+   hiding anything. Every sibling banner uses a flat hex for the same reason. */
+.sf-resort_message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f7f7f5;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.sf-resort_text {
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgba(55, 53, 47, 0.72);
+}
+
+/* check.svg ships blue (#0081F0); mask + fill paints it the same muted ink as
+   the copy beside it, so the tick reads as punctuation rather than a status light. */
+.sf-resort-ic {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  margin-right: 6px;
+  background-color: rgba(55, 53, 47, 0.6);
+  -webkit-mask: url("../Icons/check.svg") no-repeat center / contain;
+          mask: url("../Icons/check.svg") no-repeat center / contain;
+}
+
+.loading_data_text {
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #b48401;
+}
+
+.loading_data_message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff5db;
+  border-bottom: solid #ffdc7c;
+}
+
+.footer_div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #f6f6f6;
+  flex-direction: column;
+  padding: 10px 40px;
+}
+
+.email_button {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  padding-bottom: 12px;
+  padding-top: 12px;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.sub_footer_one {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-bottom: 12px;
+  padding-top: 12px;
+  box-sizing: border-box;
+}
+
+.sub_footer_one_feature {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+  box-sizing: border-box;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.footer_div_again {
+  display: flex;
+  align-items: center;
+  background-color: #f6f6f6;
+  flex-direction: column;
+  box-shadow: 0 -0.5px 1px rgba(0, 0, 0, 0.1);
+}
+
+.footer_div_again_sub {
+  display: flex;
+  align-items: center;
+  background-color: #f6f6f6;
+  flex-direction: column;
+  width: 100%;
+  box-shadow: 0 -0.5px 1px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 0;
+}
+
+.footer_div_again_sub.sf-footer-active {
+  z-index: 20;
+}
+
+#feedrankFooter {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  align-self: stretch !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 12px 15px !important;
+  border-top: 1px solid rgba(128, 128, 128, 0.15) !important;
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+#feedrank-support-btn {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #ffd500 !important;
+  color: #111827 !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(255, 213, 0, 0.35) !important;
+  transition: opacity 0.15s ease, transform 0.1s ease !important;
+}
+
+#feedrank-support-btn:hover {
+  opacity: 0.92 !important;
+  transform: translateY(-1px) !important;
+}
+
+#feedrank-support-btn:active {
+  transform: translateY(0) !important;
+}
+
+.with-party-icon {
+  position: relative;
+  padding-left: 20px;
+  display: inline-block;
+}
+
+.with-party-icon::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 13px;
+  height: 13px;
+  background: url("/Icons/PartyIcon.png") no-repeat center center;
+  background-size: contain;
+}
+
+.footer_div_again_sub_feature {
+
+  border: 1px solid rgba(0,0,0,0.06);
+  /* box-shadow: 0 1px 2px rgba(0,0,0,0.06); */
+  /* background-color: white; */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.01), 0 1px 2px rgba(0, 0, 0, 0.01);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 1), rgba(255, 255, 255, 1));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+
+  width: calc(100% - 30px);
+  margin: 0 15px 15px 15px;
+
+  box-sizing: border-box;
+  border-left: 2px solid rgb(255 233 163);
+
+}
+
+.footer_div_again_sub_feature.banner-hide {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.footer_div_sub_siv {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.footer_text {
+  font-size: 13px;
+  font-weight: 350;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgb(51 65 85 / 80%);
+  margin-left: 0.6rem;
+}
+
+.footer_text_again {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgb(51 65 85 / 80%);
+  text-align: center;
+}
+
+.footer_text_again_sub {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: black;
+  text-align: center;
+}
+
+.footer_text_with_icon {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  /* ✅ match your spacing rhythm */
+  padding: 13px 13px;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.footer_text_again_sub_feature {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}
+
+img.close_banner_icon {
+  width: 7px;
+  height: 7px;
+  cursor: pointer;
+  margin-left: 2px;
+}
+
+img.close_banner_icon:hover {
+  opacity: 0.6;
+}
+
+.my_name {
+  font-weight: 600;
+}
+
+.sort_by_banner_text {
+  color: white;
+  font-weight: 350;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.sort_by_banner_text_again {
+  color: white;
+}
+
+.sort_by_banner_inner_div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+  padding: 10px 20px;
+  height: 3rem;
+}
+
+.nav_categories {
+  width: 120%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+  padding: 10px 14px;
+  border-radius: 0.5rem;
+  margin-bottom: 7px;
+}
+
+.nav_categories_bottom {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  --tw-bg-opacity: 10;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity));
+  margin-bottom: 5px;
+}
+
+.selected_category_div_main {
+  padding-bottom: 5px;
+}
+
+.not_selected_category_div_main {
+  padding-bottom: 5px;
+}
+
+.latest_reels:hover,
+.all_reels:hover {
+  cursor: pointer !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.loading_message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffebb8;
+  border-bottom: solid #ffb900;
+}
+
+.loading_text {
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #9c1c26;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  --tw-bg-opacity: 1;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.image_logo {
+  width: 24px;
+  height: 24px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-left: 15px;
+  padding: 0;
+  --animate-duration: 0.8s;
+}
+
+.reels_circle {
+  position: absolute;
+  top: 102px;
+  width: 12rem;
+}
+
+/* ── hide native selects (kept for JS value reading) ── */
+.sf-hidden-select {
+  display: none !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   Notion-style custom dropdown
+═══════════════════════════════════════════════════════ */
+
+.sf-dd {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+      margin-bottom: 6px;
+}
+
+/* trigger button */
+.sf-dd-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 10px 7px 12px;
+  background: transparent;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #1a1a1a;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.sf-dd-trigger:hover {
+  background: #f9f9f9;
+  border-color: rgba(0,0,0,0.2);
+}
+
+.sf-dd-label {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sf-dd-arrow {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  opacity: 0.5;
+  transition: transform 0.15s;
+}
+
+.sf-dd-menu.sf-dd-open ~ .sf-dd-trigger .sf-dd-arrow,
+.sf-dd-trigger[aria-expanded="true"] .sf-dd-arrow {
+  transform: rotate(180deg);
+}
+
+/* dropdown menu panel */
+.sf-dd-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
+  z-index: 99999;
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+.sf-dd-menu.sf-dd-open {
+  display: block;
+}
+
+/* individual option */
+.sf-dd-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background 0.08s;
+  border-radius: 4px;
+  margin: 0 3px;
+}
+
+.sf-dd-opt:hover:not(.sf-dd-locked) {
+  background: #f4f4f4;
+}
+
+.sf-dd-opt.sf-dd-selected {
+  background: #f0f0f0;
+  font-weight: 500;
+}
+
+/* Free state only: the one unlocked (selected) option gets a trailing check to
+   mark it as selected. space-between pushes it to the right, like the Get Pro
+   arrow. Pro clears body.sf-locked, so no option ever shows a check. Applies to
+   every platform's dropdowns; the Custom row is excluded. */
+body.sf-locked .sf-dd-opt.sf-dd-selected:not(.sf-dd-opt-custom)::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  margin-left: 8px;
+  margin-right: 5px;                         /* nudged left, past the Get Pro arrow's 18px inset */
+  /* check.svg ships blue (#0081F0); mask + fill paints it a muted, Notion-like
+     grey — still blackish, softer than the selected option's #1a1a1a label. */
+  background-color: #565656;
+  -webkit-mask: url("../Icons/check.svg") no-repeat center / contain;
+  mask: url("../Icons/check.svg") no-repeat center / contain;
+}
+
+/* locked option */
+.sf-dd-opt.sf-dd-locked {
+  color: #c0c0c0;
+  cursor: default;
+}
+
+.sf-dd-opt.sf-dd-locked:hover {
+  background: transparent;
+}
+
+/* Pro pill */
+.sf-dd-pro-pill {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: #999;
+  background: #f0f0f0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* "New" pill on the Custom… row — Pro users only, dismissed after first use */
+.sf-dd-new-pill {
+  display: none;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: #999;
+  background: #f0f0f0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  margin-left: 0;
+}
+.sf-dd-new-pill.sf-show {
+  display: inline-block;
+}
+
+/* ──────────────────────────────────────────────
+   Custom range — divider, Custom… row, slide-in
+─────────────────────────────────────────────── */
+
+.sf-dd-divider {
+  height: 1px;
+  background: #ececec;
+  margin: 4px 8px;
+}
+
+/* Free/signed-out state: the divider directly above the Custom row is Pro-only.
+   Free users already get the Get Pro row's own divider below Custom, so this one
+   would double up — hide it. unlock_all_options() clears body.sf-locked, which
+   reveals it for Pro. Targets the divider immediately preceding the Custom row,
+   on every platform's dropdowns (IG/TT/FB/YT). */
+body.sf-locked .sf-dd-divider:has(+ .sf-dd-opt-custom) {
+  display: none;
+}
+
+.sf-dd-opt-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sf-dd-opt-custom-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sf-dd-pencil {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.sf-dd-opt-chev {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transform: rotate(-90deg);
+}
+
+.sf-dd-opt-custom.sf-dd-locked .sf-dd-pencil {
+  opacity: 0.35;
+}
+
+.sf-dd-opt-custom.sf-dd-locked .sf-dd-opt-chev {
+  display: none;
+}
+
+.sf-dd-opt-custom.sf-dd-selected .sf-dd-opt-label {
+  font-weight: 500;
+}
+
+/* ──────────────────────────────────────────────
+   Upgrade row — a quiet last item in the IG
+   dropdowns. Free/signed-out only: sf_dd_lock()
+   flips the wrapper to flex, unlock_all_options()
+   hides it for Pro. Geometry mirrors .sf-dd-opt so
+   its hover is identical to the option rows.
+─────────────────────────────────────────────── */
+
+/* wrapper stacks the divider above the button (display set inline by JS) */
+.sf-dd-get-pro {
+  flex-direction: column;
+}
+
+.sf-dd-get-pro-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 6px 0 3px;                       /* left inset matches .sf-dd-opt; extra 6px right */
+  padding: 6px 12px;                         /* same as the option rows */
+  border: none;
+  border-radius: 4px;                        /* same rounded hover rect as the options */
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+
+.sf-dd-get-pro-btn:hover {
+  background: #f4f4f4;                        /* identical to .sf-dd-opt:hover */
+}
+
+.sf-dd-get-pro-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.sf-dd-get-pro-icon {
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin-right: 7px;
+  flex-shrink: 0;
+  /* getPro.svg ships blue (#0081F0); mask + fill paints it black-at-0.35 — the
+     exact treatment of the locked Custom pencil, so the two icons match. */
+  background-color: rgba(0, 0, 0, 0.35);
+  -webkit-mask: url("../Icons/getPro.svg") no-repeat center / contain;
+  mask: url("../Icons/getPro.svg") no-repeat center / contain;
+}
+
+.sf-dd-get-pro-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.sf-dd-get-pro-arrow {
+  display: block;
+  flex-shrink: 0;
+  margin-left: 8px;
+  width: 12px;
+  height: 10px;                              /* horizontal arrow (arrowRight.svg, ~1.22:1) */
+  /* arrowRight.svg ships blue (#0081F0); mask + fill paints it black-at-0.35 to
+     match the leading star and the locked Custom pencil. */
+  background-color: rgba(0, 0, 0, 0.35);
+  -webkit-mask: url("../Icons/arrowRight.svg") no-repeat center / contain;
+  mask: url("../Icons/arrowRight.svg") no-repeat center / contain;
+}
+
+/* List ↔ panel toggle inside menu */
+.sf-dd-menu .sf-dd-options-list {
+  display: block;
+}
+
+.sf-dd-menu .sf-dd-custom-panel {
+  display: none;
+}
+
+.sf-dd-menu.sf-dd-show-custom .sf-dd-options-list {
+  display: none;
+}
+
+.sf-dd-menu.sf-dd-show-custom .sf-dd-custom-panel {
+  display: block;
+}
+
+/* Slide-in animation for the custom panel */
+@keyframes sfDdPanelIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.sf-dd-menu.sf-dd-show-custom .sf-dd-custom-panel {
+  animation: sfDdPanelIn 0.18s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Custom amount panel */
+.sf-dd-custom-panel {
+  padding: 10px 12px 12px;
+}
+
+.sf-dd-custom-title {
+  display: block;
+  margin: 0 0 9px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #37352f;
+  letter-spacing: -0.005em;
+  line-height: 1;
+}
+
+.sf-dd-custom-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #37352f;
+  background: #fbfbfa;
+  border: 1px solid #e6e5e1;
+  border-radius: 5px;
+  box-shadow: inset 0 1px 2px rgba(15,15,15,0.04);
+  outline: none;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+  transition: border-color 0.1s, background 0.1s;
+}
+
+.sf-dd-custom-input::-webkit-outer-spin-button,
+.sf-dd-custom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sf-dd-custom-input::placeholder {
+  color: #b8b7b3;
+}
+
+.sf-dd-custom-input:focus {
+  background: #ffffff;
+  border-color: #c2c1bc;
+}
+
+.sf-dd-custom-input.sf-dd-custom-input-error,
+.sf-dd-custom-input.sf-dd-custom-input-error:focus {
+  border-color: #e0a3a3;
+  background: #fdf7f7;
+}
+
+/* Inline error — only rendered when populated */
+.sf-dd-custom-error {
+  display: none;
+  margin: 6px 2px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #b1463c;
+  letter-spacing: -0.003em;
+  line-height: 1.35;
+}
+
+.sf-dd-custom-error.sf-dd-custom-error-visible {
+  display: block;
+}
+
+/* Buttons row */
+.sf-dd-custom-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.sf-dd-custom-cancel,
+.sf-dd-custom-accept {
+  flex: 1;
+  padding: 6px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+  transition: background 0.08s, border-color 0.08s, color 0.08s, box-shadow 0.08s;
+}
+
+/* Cancel — secondary */
+.sf-dd-custom-cancel {
+  color: #37352f;
+  background: #ffffff;
+  border: 1px solid #e6e5e1;
+  box-shadow: 0 1px 2px rgba(15,15,15,0.04);
+}
+
+.sf-dd-custom-cancel:hover {
+  background: #f7f7f5;
+  border-color: #d9d8d4;
+}
+
+/* Accept — primary (FeedRank yellow) */
+.sf-dd-custom-accept {
+  color: #111827;
+  background: #ffd500;
+  border: 1px solid #e6bf00;
+  box-shadow: 0 1px 2px rgba(255, 213, 0, 0.25);
+  font-weight: 500;
+}
+
+.sf-dd-custom-accept:not(:disabled):hover {
+  background: #f5cb00;
+  border-color: #cca800;
+}
+
+.sf-dd-custom-accept:disabled {
+  color: #b8b7b3;
+  background: #f4f4f2;
+  border-color: #ececea;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* ──────────────────────────────────────────────
+   Custom date range — inline panel (overlay)
+─────────────────────────────────────────────── */
+
+.sf-dd-custom-panel-date {
+  padding: 8px 10px 14px;
+}
+
+/* Grow the popup body so the absolutely-positioned date panel is fully contained
+   within the popup chrome (no overflow into the host page). */
+body.sf-date-panel-open .chrome {
+  min-height: 500px;
+  padding-bottom: 0;
+}
+
+/* When the feature banner is also visible, it adds ~70px of vertical content
+   above the dropdowns, so the popup needs to grow further. */
+body.sf-date-panel-open.sf-feature-banner-open .chrome {
+  min-height: 580px;
+}
+
+.sf-dd-custom-panel-date .sf-dd-custom-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.sf-date-status {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #9a9a9a;
+  letter-spacing: 0.005em;
+}
+
+.sf-date-status.sf-date-status-range {
+  color: #b48401;
+  font-weight: 500;
+}
+
+/* Calendar */
+.sf-cal {
+  margin-top: 8px;
+  padding: 6px 6px 4px;
+  background: #fff;
+  border: 1px solid #e6e5e1;
+  border-radius: 6px;
+}
+
+.sf-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px 4px;
+}
+
+.sf-cal-title {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #37352f;
+  letter-spacing: -0.005em;
+}
+
+.sf-cal-nav {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #8a8a8a;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.sf-cal-nav:hover:not(:disabled) {
+  background: #f1f1ef;
+  color: #1a1a1a;
+}
+
+.sf-cal-nav:disabled {
+  color: #d8d8d6;
+  cursor: default;
+}
+
+.sf-cal-nav::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+}
+
+.sf-cal-prev::before {
+  transform: rotate(45deg);
+  margin-left: 2px;
+}
+
+.sf-cal-next::before {
+  transform: rotate(-135deg);
+  margin-right: 2px;
+}
+
+.sf-cal-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+
+.sf-cal-dow span {
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #9a9a9a;
+  padding: 2px 0;
+  letter-spacing: 0.04em;
+}
+
+.sf-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.sf-cal-day {
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: #37352f;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.08s, color 0.08s;
+}
+
+.sf-cal-day-other-month {
+  color: #c0c0c0;
+}
+
+.sf-cal-day-future {
+  color: #d4d4d2;
+  cursor: default;
+  pointer-events: none;
+}
+
+.sf-cal-day-today:not(.sf-cal-day-endpoint) {
+  box-shadow: inset 0 0 0 1px #d9d8d4;
+}
+
+.sf-cal-day:hover:not(.sf-cal-day-future):not(.sf-cal-day-endpoint) {
+  background: #f1f1ef;
+}
+
+.sf-cal-day-in-range:not(.sf-cal-day-endpoint) {
+  background: #fff8cc;
+  border-radius: 0;
+  color: #8c6b00;
+}
+
+.sf-cal-day-in-range.sf-cal-day-range-start {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.sf-cal-day-in-range.sf-cal-day-range-end {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.sf-cal-day-endpoint {
+  background: #ffd500;
+  color: #111827;
+  font-weight: 600;
+}
+
+.sf-cal-day-endpoint:hover {
+  background: #f5cb00;
+}
+
+.sf-cal-day-preview {
+  background: #fffbe0;
+}
+
+.drop_down,
+.drop_down_dates,
+.drop_down_tiktok {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  color: black;
+  border-radius: 0.5rem;
+  padding: 5px 10px;
+  width: 100%;
+  font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica, Arial, sans-serif;
+  background: transparent;
+  border: 1px solid rgb(209 213 219);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  background-image: url("/Icons/ButtonIcons/DownGrey.svg");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 9px 9px;
+  padding-right: 40px;
+}
+
+.drop_down:hover,
+.drop_down_dates:hover,
+.drop_down_tiktok:hover {
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+/* free state — subtle tint to signal gating */
+.drop_down.is-free,
+.drop_down_dates.is-free,
+.drop_down_tiktok.is-free,
+.drop_down_dates_tiktok.is-free {
+  color: #555;
+}
+
+/* locked options — muted text */
+.drop_down.is-free option:disabled,
+.drop_down_dates.is-free option:disabled,
+.drop_down_tiktok.is-free option:disabled,
+.drop_down_dates_tiktok.is-free option:disabled {
+  color: #bbb;
+}
+
+.drop_down_dates {
+  display: none;
+}
+
+.drop_down_dates_tiktok {
+  display: none;
+
+  /* ✅ remove native select arrow (fixes double arrow) */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  color: black;
+  border-radius: 0.5rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  width: 100%;
+  line-height: 1.1666666667;
+  font-weight: 400;
+  letter-spacing: 0.009em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: white;
+  transition: background 0.2s ease-in-out;
+  border-width: 1px;
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity));
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+
+  background-image: url("/Icons/ButtonIcons/DownGrey.svg");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 9px 9px;
+
+  /* ✅ make room for the arrow */
+  padding-right: 40px;
+}
+
+.drop_down_dates_tiktok:hover {
+  background-color: #f9f9f9;
+  cursor: pointer;
+}
+
+.beta {
+  --tw-text-opacity: 0.7;
+  color: rgb(31 41 55 / var(--tw-text-opacity));
+  font-weight: 500;
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity));
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+  font-size: 0.5rem;
+  line-height: 1rem;
+  border-radius: 0.25rem;
+  margin-right: 15px;
+}
+
+.coffee_logo:hover {
+  border: solid RGB(224, 193, 0);
+  border-width: 2px;
+  border-radius: 0.5rem;
+}
+
+.yellowBox {
+  position: absolute;
+  left: 197px;
+  width: 317px;
+  top: -256px;
+  transform: rotate(-1447deg);
+}
+
+.yellowBoxAgain {
+  position: absolute;
+  width: 317px;
+  transform: rotate(-1461deg);
+}
+
+.footer_text_again_header {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 2.8rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.footer_text_again_subheader {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 350;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgb(51 65 85 / 70%);
+}
+
+.footer_text_again_subheader_sub {
+  margin: 0;
+  font-size: 9.5px;
+  font-weight: 350;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgb(51 65 85 / 70%);
+}
+
+.footer_text_again_subheader_sub_bottom {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: rgb(51 65 85 / 90%);
+}
+
+.footer_text_again_subheader_sub_bottom_footer {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #8b8b8b;
+}
+
+.TaherSolo {
+  width: 3.9rem;
+  margin: 0.1rem;
+  display: block;
+  position: absolute;
+  left: 253px;
+  top: 298px;
+  --animate-duration: 0.8s;
+}
+
+.footer_div_again:hover {
+  color: #393e41;
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity));
+  transition: all 0.2s ease-in-out;
+}
+
+.nav_categories_back_added {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: sp;
+  padding-top: 5px;
+  display: flex;
+  margin-bottom: 17px;
+  margin-top: 25px;
+}
+
+.selected_category_div {
+  margin-left: 13px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.nav_buttons {
+  width: 100%;
+}
+
+.buttonMainDiv {
+  border-radius: 0.5rem;
+  background-color: #fafafa;
+  --linaria-theme_palette-border-tertiary: #DDDDDD;
+  border: 1px solid var(--linaria-theme_palette-border-tertiary);
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity));
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.buttonMainDiv:not(.sf-sort-unified) {
+  background-color: #ffffff;
+}
+
+.nav_button_div_one {
+  padding-left: 15px;
+  padding-right: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: 2px;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+#sortOldestClicks {
+  border-bottom: 0px;
+}
+
+#sortLikesClick {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+#sortOldestClicks {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+#sortLikesClickTikTok {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+#sortOldestClicksTikTok {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+}
+
+.main_nav_div_zero_state {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.InstaMain,
+.TikTokMain,
+.FacebookMain,
+.YouTubeMain,
+.main_nav_div,
+.main_nav_div_tiktok {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+.main_nav_div_zero_state_sub {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+}
+
+.main_nav_div_parent {
+  width: 100%;
+  padding-bottom: 8px;
+  overflow: visible;
+}
+
+.segmented-control {
+  /* margin-bottom: 3px; */
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  border-radius: 0.5px;
+  /* padding-left: 15px;
+  padding-right: 15px; */
+  /* width: 100%; */
+  background-color: #f6f6f6;
+}
+
+.segmented-control button {
+  display: flex;
+  align-items: center;
+  /* border-radius: 0.5rem; */
+  /* justify-content: space-between; */
+  flex-direction: row;
+  width: 50%;
+  padding: 5px 10px;
+  cursor: pointer;
+  line-height: 1.1666666667;
+  font-weight: 400;
+  letter-spacing: 0.009em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.itemButtonClass,
+.itemButtonClassTikTok {
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: black;
+  font-weight: 500;
+  --tw-bg-opacity: 1;
+  border-radius: 0.5rem;
+  --linaria-theme_palette-border-tertiary: #DDDDDD;
+  border: 1px solid var(--linaria-theme_palette-border-tertiary);
+  transition: all 0.2sease-in-out;
+  border-width: 1.5px;
+}
+
+.itemButtonClass:hover,
+.itemButtonClassTikTok:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity));
+  color: black;
+}
+
+.dateRangeButtonClass,
+.dateRangeButtonClassTikTok {
+  border: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: rgb(51 65 85 / 70%);
+  font-weight: 500;
+  background-color: #f6f6f6;
+}
+
+.dateRangeButtonClass:hover,
+.dateRangeButtonClassTikTok:hover {
+  background-color: white;
+  color: black;
+}
+
+.OnlyWorksPosts {
+  display: none;
+  justify-content: center;
+  text-align: center;
+  font-weight: normal;
+  font-size: 10px;
+  color: rgb(51 65 85 / 60%);
+  margin-top: 10px;
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.sf-info-icon {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask: url("../Icons/infoIcon.svg") center / contain no-repeat;
+          mask: url("../Icons/infoIcon.svg") center / contain no-repeat;
+}
+
+.insta_tiktok_buttons {
+  border-radius: 0.5rem;
+  --linaria-theme_palette-border-tertiary: #DDDDDD;
+  border: 1px solid var(--linaria-theme_palette-border-tertiary);
+  transition: all 0.2sease-in-out;
+  border-width: 1.5px;
+  color: black;
+  font-weight: 400;
+  font-size: 15px;
+  background-color: white;
+  padding-right: 12px;
+  padding-left: 12px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* (#insta_sort_menu used to pin margin-top: 10px here. That ID beat the shared
+   `.InstaMain/.TikTokMain/.FacebookMain .sf-sort-unified` trim and left IG's card
+   4px lower than TikTok's and Facebook's, so it's gone — the shared rule owns
+   the spacing for all three now.) */
+
+.back-btn {
+  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 15px;
+  cursor: pointer;
+  align-self: flex-start;
+  width: auto;
+  max-width: max-content;
+  white-space: nowrap;
+}
+
+.back-btn:hover {
+  opacity: 0.85;
+}
+
+.back-ic {
+  width: 3px;
+}
+
+/* ================================
+   Footer icons + Notion menu (CLEAN)
+   ================================ */
+
+/* Footer icons container */
+.footer-icons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 24px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 20;
+}
+
+.footer-icons-left,
+.footer-icons-right {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.footer-icons-left {
+  position: relative; /* anchor for menu */
+}
+
+/* .footer-icons-right {
+  margin-left: auto;
+  padding-right: 5px;
+} */
+
+/* Icon buttons (••• + account). Notion-style: a rounded-square pill in
+   Notion's warm ink (#37352f) at low alpha appears on hover. */
+.footer-icon-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+
+  background: transparent;
+  border: 0;
+  padding: 0;
+
+  text-decoration: none;
+  position: relative; /* tooltip */
+  flex: 0 0 auto;
+
+  transition: background-color 0.12s ease;
+}
+
+.footer-icon-link:hover,
+.footer-icon-link:focus-visible {
+  outline: 0;
+  background: rgba(55, 53, 47, 0.06);
+}
+
+/* Dots button (button element) should match <a> exactly */
+.footer-menu-trigger {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The ••• stays pressed while its menu is open, like Notion's */
+.footer-menu-trigger[aria-expanded="true"] {
+  background: rgba(55, 53, 47, 0.08);
+}
+
+/* Icon sizing */
+.footer-icon-one {
+  width: 13px;
+  height: auto;
+  display: block;
+}
+
+/* Letter avatar — the signed-in user's first initial, Notion's sidebar
+   treatment: a flat light-grey disc (Notion ink at low alpha), no ring, the
+   letter in the same ink. */
+.sf-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+
+  background: rgba(55, 53, 47, 0.1);
+  color: rgba(55, 53, 47, 0.82);
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  user-select: none;
+}
+
+/* The account button swaps its person icon for the avatar with [hidden].
+   Both set their own display, which beats the UA's [hidden] rule, so restate
+   it here with enough specificity to win. */
+.footer-icon-link [hidden] {
+  display: none;
+}
+
+/* Tooltip — Notion's near-black bubble. Pinned to the button's RIGHT edge
+   rather than centred: the account button sits 24px from the popup's right
+   edge, and a centred bubble holding an email would poke past it, which
+   permanently widens the popup (see the .main_div guard). The font is set
+   here because nothing up the tree sets one. */
+.footer-icon-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+
+  background-color: rgba(15, 15, 15, 0.92) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(15, 15, 15, 0.12);
+
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  white-space: nowrap;
+
+  display: none;
+  pointer-events: none;
+  z-index: 1000;
+
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.footer-icon-link:hover .footer-icon-tooltip {
+  display: block;
+}
+
+/* Second tooltip line: the signed-in email. Empty until it is known. */
+.sf-tip-sub {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+}
+
+.sf-tip-sub:empty {
+  display: none;
+}
+
+/* Menu open/close helper */
+.sf-hidden {
+  display: none;
+}
+
+/* The ••• menu — Notion popover: 10px radius, ring + layered shadow instead
+   of a border, 4px inset. left: -7px centres the 16px icon column on the •••
+   glyph above it. */
+.sf-menu {
+  position: absolute;
+  left: -7px;
+  bottom: calc(100% + 6px);
+  min-width: 184px;
+
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(15, 15, 15, 0.06),
+    0 3px 6px rgba(15, 15, 15, 0.06),
+    0 9px 24px rgba(15, 15, 15, 0.12);
+
+  padding: 4px;
+  z-index: 9999;
+
+  transform-origin: bottom left;
+  animation: sfMenuIn 0.14s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/* Rises and settles in; vertical only, so nothing moves toward the popup's
+   right edge. Replays each time .sf-hidden comes off. */
+@keyframes sfMenuIn {
+  from { opacity: 0; transform: translateY(3px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-menu { animation: none; }
+}
+
+.sf-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+
+  /* The menu is absolutely positioned inside a 28px-wide anchor, so its
+     shrink-to-fit width comes from the rows' min-content — nowrap keeps each
+     label on one line and lets the widest row size the menu. */
+  white-space: nowrap;
+
+  text-decoration: none;
+  color: #37352f;
+
+  font-size: 13px;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  transition: background-color 0.08s ease;
+}
+
+.sf-menu-item:hover,
+.sf-menu-item:focus-visible {
+  outline: 0;
+  background: rgba(55, 53, 47, 0.06);
+}
+
+/* Menu rows are text only (icons removed 2026-10-01, user's call). */
+
+/* ── Signed-out / free footers: same ••• menu as the pro footer ──
+   Their single text row becomes a flex row that bookends the footer exactly like
+   the pro one: dots hard left, the "Have Pro?" blurb hard right where
+   the pro footer puts its Account icon. Padding matches .footer-icons so the
+   footer is the same height in every user state. */
+#subFooter .sub_footer_one,
+#FreeFooter .sub_footer_one {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 24px;
+}
+
+/* The blurb is centred text by default (it used to own the full width) — right
+   align it now that it sits in the trailing slot. */
+#subFooter .footer_text_again_sub,
+#FreeFooter .footer_text_again_sub {
+  align-items: flex-end;
+  text-align: right;
+}
+
+
+/* ✅ only affects the banner */
+.footer_div_again_sub_feature .footer_text_with_icon {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* ✅ make the <p> take remaining space so X gets pushed to the edge */
+.footer_div_again_sub_feature .footer_text_again_subheader_sub_bottom {
+  flex: 1;
+}
+
+/* ✅ keep X pinned right (optional but nice) */
+.footer_div_again_sub_feature .close_banner_icon {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.footer_div_again_sub_feature .banner-muted{
+  color: rgb(51 65 85 / 60%);
+  font-weight: 400;
+}
+
+.sf_banner__partyIcon__v1 {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+
+  /* match Notion-ish icon softness */
+  opacity: 0.85;
+
+  /* keeps icon aligned to first line of text */
+  margin-top: 1px;
+}
+
+/* ── Feature banner, "note" variant (Sort Feed MCP announcement) ──
+   A Notion callout in the Sort Feed palette: a flat wash of the brand yellow
+   (#FFDC80 at ~16%) with no border or shadow, and one line: "New:" a step darker
+   than the sentence it leads. The block itself is the link. */
+.footer_div_again_sub_feature.sf-banner--note {
+  position: relative;
+  /* The info bubble hangs below the banner, over the sort card. Without this the
+     card paints on top of it. Must live here, on the banner: putting a z-index on
+     the icon instead opens a stacking context that traps the bubble inside. */
+  z-index: 30;
+  cursor: pointer;
+  background: rgba(255, 220, 128, 0.16);
+  transition: background-color 0.15s ease;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+}
+/* Hover: the wash deepens by a hair, and that is the whole effect — no border,
+   no ring, no shadow, nothing moves or resizes. The block is the entire click
+   target, so anything louder would swamp a 300px popup. The close and info icons
+   keep their own hovers on top of this. */
+.footer_div_again_sub_feature.sf-banner--note:hover {
+  background: rgba(255, 220, 128, 0.24);
+}
+.sf-banner--note .footer_text_with_icon {
+  align-items: center;
+  padding: 10px 12px 10px 14px;
+  gap: 12px;
+}
+.sf-banner--note .sf_banner__partyIcon__v1 {
+  display: none;
+}
+.sf-banner--note .footer_text_again_subheader_sub_bottom {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(55, 53, 47, 0.85);
+  min-width: 0;
+}
+/* "New:" leads the line a step darker and heavier than the copy after it. */
+.sf-note-lead {
+  font-weight: 550;
+  color: rgba(55, 53, 47, 1);
+}
+/* The whole note is one click target, the way Notion's announcement callouts
+   work: the sentence is the anchor text and a stretched ::after covers the
+   block, so anywhere in the yellow opens the page. No underline and no pill —
+   the arrow at the end of the sentence is the affordance, and the yellow
+   deepens a step on hover. Nothing moves or resizes. */
+.sf-note-link {
+  color: inherit;
+  text-decoration: none;
+}
+.sf-note-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+}
+/* Comes after the link in the markup, so it sits above the stretched ::after and
+   dismissing still works. Notion's dialog close:
+   the glyph keeps its size and a soft rounded square fades in behind it, built
+   from padding on the image, with a matching negative right margin so the glyph
+   itself never moves. */
+.sf-banner--note .close_banner_icon {
+  position: relative;
+  box-sizing: content-box;
+  padding: 6px;
+  margin: 0 -6px 0 0;
+  border-radius: 5px;
+  transition: background-color 0.12s ease;
+}
+.sf-banner--note .close_banner_icon:hover {
+  opacity: 1;
+  background-color: rgba(107, 78, 0, 0.1);
+}
+/* The glyph is masked so it can take the dark yellow. It has to be a child of the
+   box: put the mask on the box itself and the hover pill gets clipped to the
+   \u00d7 shape instead of staying a square. */
+.sf-banner--note .sf-note-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 9px;
+  height: 9px;
+  cursor: pointer;
+  outline: none;
+}
+/* Drawn rather than masked from close_banner.png, whose hairlines rendered almost
+   invisibly at this size. Weight is tuned against the info icon next to it: the ⓘ
+   is a thin 14px outline, so the × takes a 1.1 stroke at 9px and a slightly lighter
+   tone — dismissing is the quieter of the two actions. */
+.sf-note-close-ic {
+  display: block;
+  width: 9px;
+  height: 9px;
+  background-color: rgba(107, 78, 0, 0.36);
+  transition: background-color 0.12s ease;
+  -webkit-mask: url("../Icons/popupIcons/closeThin.svg") no-repeat center / contain;
+          mask: url("../Icons/popupIcons/closeThin.svg") no-repeat center / contain;
+}
+.sf-banner--note .sf-note-close:hover .sf-note-close-ic,
+.sf-banner--note .sf-note-close:focus-visible .sf-note-close-ic {
+  background-color: rgba(107, 78, 0, 0.78);
+}
+.sf-banner--note .sf-note-close:focus-visible {
+  background-color: rgba(107, 78, 0, 0.1);
+}
+/* TikTok visible but disabled */
+.sf-section-disabled {
+  opacity: 0.85;
+  filter: grayscale(15%);
+}
+
+/* disable clicks inside */
+.sf-section-disabled * {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
+/* tiny lock, does NOT cover UI */
+.sf-section-disabled::after {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 12px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.TikTokMain .footer_div_again_sub_feature .sf_banner__partyIcon__v1 {
+  display: none;
+}
+
+/* ── Sort / Download tab icons ── */
+.sf-tab-icon {
+  width: 11px;
+  height: 11px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  display: block;
+}
+
+/* "New" tag — same pill shape as Pro, inverted brightness */
+/* .sf-new-tag {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #6b6b6b;
+  background: #f3f3f3;
+  border-radius: 6px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  margin-left: 6px;
+} */
+
+/* ── Download panel feature rows ── */
+.sf-dl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  background-color: transparent;
+  --linaria-theme_palette-border-tertiary: #DDDDDD;
+  border-bottom: 1px solid var(--linaria-theme_palette-border-tertiary);  gap: 14px;
+}
+
+.sf-dl-row:first-child {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.sf-dl-row-last {
+  border-bottom: none;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+/* Actions rows (IG, TikTok, Facebook): match each platform's Sort-by rows exactly —
+   9px vertical / 12px horizontal padding (was 11px 20px) + the softer
+   rgba(0,0,0,0.06) divider (was #DDDDDD). YouTube's Actions left as-is. */
+.InstaMain .sf-dl-row,
+.TikTokMain .sf-dl-row,
+.FacebookMain .sf-dl-row {
+  padding: 9px 12px;
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.sf-dl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sf-dl-title {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: 0.009em;
+}
+
+.sf-dl-row-icon {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.sf-dl-blurb {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  font-weight: normal;
+  font-size: 10px;
+  color: rgb(51 65 85 / 60%);
+  margin-top: 10px;
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.sf-dl-desc {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgb(51 65 85 / 55%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.4;
+}
+
+/* Notion-style toggle */
+.sf-toggle {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 28px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sf-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.sf-toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #e0e0e0;
+  transition: background 0.15s ease;
+}
+
+.sf-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease;
+}
+
+.sf-toggle-input:checked + .sf-toggle-track {
+  background: #ffd500;
+}
+
+.sf-toggle-input:checked + .sf-toggle-track::after {
+  transform: translateX(12px);
+}
+
+/* Permanently-disabled Display row (YouTube Download — not permitted).
+   Title dims, toggle sits OFF (grey) + non-interactive, and a small note with
+   an info glyph explains why. Reuses the existing toggle + info-icon assets. */
+
+/* (The top-level Sort/Actions segmented control — .sf-mode-ctrl-wrap /
+   .sf-mode-ctrl — was removed from every platform when Actions moved behind the
+   header gear. No markup uses those classes anymore.) */
+
+/* ── IG Sort panel: unified single box ── */
+
+/* Unified box — padding inside, dropdown needs z-index to escape */
+.sf-sort-unified {
+  padding: 12px;
+  overflow: visible;
+  margin-top: 10px;
+}
+
+/* No Sort/Actions control sits above the card on IG/TikTok/Facebook anymore, so
+   trim the gap and let the card seat snug under the header instead of leaving an
+   empty band. (YouTube never had the control and sets its own 6px inline.) */
+.InstaMain .sf-sort-unified,
+.TikTokMain .sf-sort-unified,
+.FacebookMain .sf-sort-unified {
+  margin-top: 6px;
+}
+
+/* Inner section layout */
+.sf-sort-inner-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Sort by inner section — stays within box padding (same as filter by) */
+.sf-sort-inner-section--sort {
+  margin: 0;
+}
+
+.sf-sort-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid rgb(209 213 219);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  /* margin-bottom: 6px; */
+}
+
+/* Sort section spacing — replaces the old divider line */
+.sf-sort-inner-section--sort {
+  margin-top: 12px;
+  /* margin-bottom: 12px; */
+}
+
+/* Section labels inside the unified box */
+.sf-section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+/* Posts / Date tab row */
+.sf-sort-seg {
+  margin-bottom: 0;
+  border-radius: 0.5rem;
+  padding: 0px;
+  overflow: hidden;
+}
+
+
+/* Dropdown row */
+.sf-sort-dd-row {
+  padding: 0;
+}
+
+/* Sort buttons inside unified box — tighter vertical spacing */
+.sf-sort-unified .SortButtonMain {
+  padding-top: 9px;
+  padding-bottom: 9px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Sort buttons inside the card — no extra border-radius, card handles it */
+.sf-sort-card .SortButtonMain {
+  border-radius: 0;
+}
+
+.sf-sort-card .SortButtonMain:hover {
+  border-radius: 0;
+}
+
+/* The sort card normally clips (overflow:hidden) so its row-hover backgrounds
+   follow the rounded corners — but that also clips the Outlier score tooltip when
+   it opens upward from a row near the top of the card (worst on TikTok, whose
+   rows are compacted). Let ONLY the sort card overflow so the tooltip is always
+   fully visible; the Actions/Display card (plain .sf-sort-inner-section) keeps
+   clipping. First/last sort rows round their own corners so the card stays crisp
+   without the clip. */
+.sf-sort-inner-section--sort .sf-sort-card {
+  overflow: visible;
+}
+.sf-sort-inner-section--sort .sf-sort-card .SortButtonMain:first-child,
+.sf-sort-inner-section--sort .sf-sort-card .SortButtonMain:first-child:hover {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.sf-sort-inner-section--sort .sf-sort-card .SortButtonMain:last-child,
+.sf-sort-inner-section--sort .sf-sort-card .SortButtonMain:last-child:hover {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* ── TikTok: tighter spacing to fit 6 sort buttons + free footer without scrolling ── */
+
+/* margin-top matches the shared 6px trim above — this rule comes later in the
+   cascade at equal specificity, so it has to restate it or TikTok would keep the
+   old gap the removed Sort/Actions control used to fill. */
+.TikTokMain .sf-sort-unified {
+  padding: 10px;
+  margin-top: 6px;
+}
+
+.TikTokMain .sf-sort-inner-section {
+  gap: 3px;
+}
+
+.TikTokMain .sf-sort-divider {
+  margin: 10px 0;
+}
+
+.TikTokMain .sf-sort-unified .SortButtonMain {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.sf-sort-card {
+  margin-bottom: 6px;
+}
+
+
+/* Beta pill inside download rows */
+.sf-dl-title .sf-dd-pro-pill {
+  font-size: 9px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Notion polish — IG, TikTok & Facebook popups
+   Softer border widths/colors, gentler radii & shadows. Scoped to
+   the three panels (.InstaMain / .TikTokMain / .FacebookMain) so the
+   zero-state and other UI keep their look. No copy or layout changes
+   — borders / colors / shadows only.
+   ────────────────────────────────────────────────────────────── */
+
+/* Outer grey container */
+.InstaMain .buttonMainDiv,
+.TikTokMain .buttonMainDiv,
+.FacebookMain .buttonMainDiv,
+.YouTubeMain .buttonMainDiv {
+  border-color: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* White inner sort card */
+.InstaMain .sf-sort-card,
+.TikTokMain .sf-sort-card,
+.FacebookMain .sf-sort-card,
+.YouTubeMain .sf-sort-card {
+  border-color: rgba(0, 0, 0, 0.08);
+  border-radius: 9px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Sort rows — softer dividers + calmer text */
+.InstaMain .SortButtonMain,
+.TikTokMain .SortButtonMain,
+.FacebookMain .SortButtonMain,
+.YouTubeMain .SortButtonMain {
+  color: #1a1a1a;
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Gentler hover on the sort rows */
+.InstaMain .sf-sort-card .SortButtonMain:hover,
+.TikTokMain .sf-sort-card .SortButtonMain:hover,
+.FacebookMain .sf-sort-card .SortButtonMain:hover,
+.YouTubeMain .sf-sort-card .SortButtonMain:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Count / date dropdown trigger */
+.InstaMain .sf-dd-trigger,
+.TikTokMain .sf-dd-trigger,
+.FacebookMain .sf-dd-trigger,
+.YouTubeMain .sf-dd-trigger {
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.InstaMain .sf-dd-trigger:hover,
+.TikTokMain .sf-dd-trigger:hover,
+.FacebookMain .sf-dd-trigger:hover,
+.YouTubeMain .sf-dd-trigger:hover {
+  border-color: rgba(0, 0, 0, 0.16);
+}
+
+/* Selected segmented pill (Sort / Posts / TikToks / Videos) — thinner, softer
+   border. IG, FB & YT use .itemButtonClass; TikTok uses .itemButtonClassTikTok. */
+.InstaMain .itemButtonClass,
+.FacebookMain .itemButtonClass,
+.YouTubeMain .itemButtonClass,
+.TikTokMain .itemButtonClassTikTok {
+  border-width: 1px;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Facebook & YouTube — drop the last sort row's bottom border so "Oldest" doesn't
+   stack a second line against the card's bottom edge (removes the extra
+   bottom weight). Scoped to FB/YT; IG & TikTok keep their current look. */
+.FacebookMain .sf-sort-card .SortButtonMain:last-child,
+.YouTubeMain .sf-sort-card .SortButtonMain:last-child {
+  border-bottom: none;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Outlier score — preview UI (gated by `outlierFlag` in popup.js).
+   The row lives in popup.html but stays hidden until JS adds
+   `.sf-outlier-on` to `.InstaMain`. IG only.
+   ────────────────────────────────────────────────────────────── */
+
+.sf-outlier-btn {
+  display: none;
+}
+
+.InstaMain.sf-outlier-on .sf-outlier-btn,
+.TikTokMain.sf-outlier-on .sf-outlier-btn,
+.FacebookMain.sf-outlier-on .sf-outlier-btn,
+.YouTubeMain.sf-outlier-on .sf-outlier-btn {
+  display: flex;
+}
+
+/* TikTok already ships tightened spacing to fit 6 sort rows + the free-state
+   "Get Pro" footer without scrolling (see the .TikTokMain block above — rows at
+   9px). Outlier score adds a 7th row, so while the preview is on we compact the
+   rows further to 6px: 7 rows @ 6px occupy ≈ the original 6 rows @ 9px, so the
+   popup height doesn't grow and the free state still fits. Higher specificity
+   than the 9px rule above (4 classes vs 3), so it only wins when .sf-outlier-on
+   is present. IG/FB have fewer rows and keep their default padding. */
+.TikTokMain.sf-outlier-on .sf-sort-card .SortButtonMain {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* …but the tall free-state "Get Pro" footer button is gone now (removed from all
+   footers — the signed-out subFooter is just a short "Sign in" line, and Pro uses
+   the compact icon footer), so no footer eats vertical room anymore. The only
+   thing that does is the feature banner up top — so relax the TikTok sort rows
+   back to the roomy 9px that IG/FB use whenever no banner is open (free + pro
+   alike). Banner open → stay compact so the 7-row list still fits without
+   scrolling. body.sf-feature-banner-open is set in feature_banner(). */
+body:not(.sf-feature-banner-open) .TikTokMain.sf-outlier-on .sf-sort-card .SortButtonMain {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+/* Flame — masked so it renders in the same grey as the other sort icons */
+.sf-outlier-flame {
+  width: 11px;
+  height: 14px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  background-color: #888888;
+  -webkit-mask: url("../Icons/FilterBanner/bolt.svg") left / contain no-repeat;
+          mask: url("../Icons/FilterBanner/bolt.svg") left / contain no-repeat;
+}
+
+/* "New" tag — matches the app's standard Notion-style New badge */
+.sf-outlier-new {
+  margin-left: 8px;
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.38);
+}
+
+/* Info affordance — pinned to the far right of the row, anchors the tooltip */
+.sf-outlier-info-wrap {
+  margin-left: auto;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sf-outlier-info {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  cursor: default;
+  outline: none;
+  background-color: #bcc0c7;
+  transition: background-color 0.15s ease;
+  -webkit-mask: url("../Icons/FilterBanner/infoIcon.svg") center / contain no-repeat;
+          mask: url("../Icons/FilterBanner/infoIcon.svg") center / contain no-repeat;
+}
+
+.sf-outlier-info-wrap:hover .sf-outlier-info,
+.sf-outlier-info:focus-visible {
+  background-color: #6b7280;
+}
+
+/* Notion-style tooltip — dark bubble, soft shadow, gentle fade + rise */
+.sf-outlier-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: -5px;
+  width: max-content;
+  max-width: 232px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background-color: #191919;
+  color: #ffffff;
+  font-size: 11.5px;
+  line-height: 1.42;
+  font-weight: 400;
+  text-align: left;
+  letter-spacing: 0.003em;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(15, 15, 15, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  transform: translateY(3px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 1000;
+}
+
+/* Arrow pointing down to the info icon */
+.sf-outlier-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background-color: #191919;
+  transform: translateY(-50%) rotate(45deg);
+  border-radius: 1.5px;
+}
+
+.sf-outlier-info-wrap:hover .sf-outlier-tooltip,
+.sf-outlier-info:focus-visible + .sf-outlier-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Display header (IG Actions) — reuses the outlier info icon +
+   tooltip, but the tooltip opens downward (icon sits near the top).
+   ────────────────────────────────────────────────────────────── */
+
+.sf-section-label.sf-dl-head {
+  display: flex;
+  align-items: center;
+}
+
+/* Sit next to the label instead of being pushed to the far right */
+.sf-outlier-info-wrap.sf-info-down {
+  margin-left: 6px;
+}
+
+/* Slightly smaller than the sort-row info icon — sits beside the small label */
+.sf-info-down .sf-outlier-info {
+  width: 12px;
+  height: 12px;
+}
+
+/* Flip the bubble below the icon, anchored so it fits within the panel.
+   The anchor is a fixed offset from the icon, so the section label before it
+   must stay short ("Behavior", "Display", "AI Agents"): "Claude and ChatGPT"
+   pushed the bubble past the popup's right edge (2026-10-01). */
+.sf-info-down .sf-outlier-tooltip {
+  bottom: auto;
+  top: calc(100% + 8px);
+  right: auto;
+  left: -50px;
+  transform: translateY(-3px);
+}
+
+/* Arrow points up at the icon (56px from the tooltip's left = icon center) */
+.sf-info-down .sf-outlier-tooltip::after {
+  top: auto;
+  bottom: 100%;
+  right: auto;
+  left: 56px;
+  transform: translateY(50%) rotate(45deg);
+}
+/* ══════════════════════════════════════════════════════════════════
+   Header gear ▸ Settings subview (Instagram only)
+
+   IG dropped the Sort/Actions segmented control, so the Display toggles
+   moved behind a gear that sits just left of the Free/Pro tag. Opening
+   Settings crossfades the header (logo ▸ "← Settings") and slides the
+   content panels past each other — Notion's settings-page feel.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Shared two-phase schedule ──
+   Everything that moves — header halves, gear, and both content panels — runs
+   on ONE clock: 90ms out, then 180ms in. Header/gear express it as
+   transition duration+delay, the panels as keyframes started by JS at +90ms, so
+   the wordmark and the card beneath it travel together instead of racing.
+
+   Phase A  0 →  90ms   outgoing half fades + slides away
+   Phase B 90 → 270ms   incoming half springs in
+
+   The out/in halves are asymmetric on purpose: leaving is a quick exit, arriving
+   gets the longer eased settle. Direction is encoded in the *state*, not the
+   selector — the default rules describe closing, .sf-settings-open describes
+   opening, and each names the phase it owns. */
+
+/* Anchor for the absolutely-positioned Settings header. overflow-x clips the
+   header crossfade's horizontal travel: the popup window sizes itself to the
+   document, so a transform poking past the edge (even at opacity 0) widens the
+   window mid-animation — and Chrome never shrinks it back, leaving permanent
+   white gutters beside the footer. Clipped on x only so the logo's
+   bounceInDown entrance still overflows vertically. */
+.header {
+  position: relative;
+  overflow-x: clip;
+}
+
+/* Closing: brand is the incoming half (phase B) */
+.sf-header-brand {
+  display: flex;
+  align-items: center;
+  transition:
+    opacity 0.18s ease 0.09s,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1) 0.09s;
+}
+
+/* Closing: settings header is the outgoing half (phase A) */
+.sf-header-settings {
+  transition:
+    opacity 0.09s ease,
+    transform 0.09s ease;
+}
+
+.sf-header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Gear button ── */
+
+/* Hidden everywhere except Instagram (body.sf-gear-on) */
+.sf-gear-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin-right: 7px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  /* Closing: the gear is the incoming half (phase B). Its hover background is
+     deliberately left out of the phase schedule so hover stays instant. */
+  transition:
+    background-color 0.12s ease,
+    opacity 0.18s ease 0.09s,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1) 0.09s;
+}
+
+body.sf-gear-on .sf-gear-btn {
+  display: inline-flex;
+}
+
+.sf-gear-btn:hover {
+  background-color: rgba(0, 0, 0, 0.055);
+}
+
+.sf-gear-btn:active {
+  background-color: rgba(0, 0, 0, 0.09);
+}
+
+.sf-gear-btn:focus-visible {
+  outline: 2px solid rgba(35, 131, 226, 0.5);
+  outline-offset: 1px;
+}
+
+/* settingsIcon.svg ships grey (#A29E99); mask + background-color paints it at
+   the popup's muted-label tone so it never competes with the wordmark, and can
+   darken on hover. Same treatment as .sf-dd-get-pro-icon. */
+.sf-gear-ic {
+  display: block;
+  width: 13px;
+  height: 13px;
+  background-color: rgba(0, 0, 0, 0.32);
+  -webkit-mask: url("../Icons/popupIcons/settingsIcon.svg") no-repeat center / contain;
+          mask: url("../Icons/popupIcons/settingsIcon.svg") no-repeat center / contain;
+  transition: background-color 0.12s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sf-gear-btn:hover .sf-gear-ic {
+  background-color: rgba(0, 0, 0, 0.62);
+  transform: rotate(35deg);
+}
+
+/* ── Settings header (back arrow + title) ── */
+
+.sf-header-settings {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  /* 13 + 22 (button) + 5 (title gap) = 40px — the exact x where "Sort Feed"
+     starts (15 logo padding + 19 logo + 6 heading padding), so the two titles
+     land on the same baseline column during the crossfade. */
+  padding-left: 13px;
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+}
+
+.sf-settings-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.sf-settings-back:hover {
+  background-color: rgba(0, 0, 0, 0.055);
+}
+
+.sf-settings-back:active {
+  background-color: rgba(0, 0, 0, 0.09);
+}
+
+.sf-settings-back:focus-visible {
+  outline: 2px solid rgba(35, 131, 226, 0.5);
+  outline-offset: 1px;
+}
+
+/* rightIcon.svg is a left-pointing arrow — used as the back chevron.
+   Deliberately inert on hover (no shift, no scale, no recolor): the grey
+   pill behind it is the whole hover affordance. */
+.sf-settings-back-ic {
+  display: block;
+  width: 12px;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.45);
+  -webkit-mask: url("../Icons/popupIcons/rightIcon.svg") no-repeat center / contain;
+          mask: url("../Icons/popupIcons/rightIcon.svg") no-repeat center / contain;
+}
+
+/* Matches the "Sort Feed" wordmark exactly — only the leading gap differs,
+   since it trails a 22px icon button rather than the logo. */
+.sf-settings-title {
+  padding-left: 5px;
+}
+
+/* ── Open state (roles flip: brand + gear now own phase A, settings owns B) ── */
+
+body.sf-settings-open .sf-header-brand {
+  opacity: 0;
+  transform: translateX(6px);
+  pointer-events: none;
+  transition:
+    opacity 0.09s ease,
+    transform 0.09s ease;
+}
+
+body.sf-settings-open .sf-header-settings {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  transition:
+    opacity 0.18s ease 0.09s,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1) 0.09s;
+}
+
+/* Fades in place (not display:none) so the Free/Pro tag never shifts */
+body.sf-settings-open .sf-gear-btn {
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+  transition:
+    background-color 0.12s ease,
+    opacity 0.09s ease,
+    transform 0.09s ease;
+}
+
+/* ── Panel swap ──
+   Same 90/180 phases as the header above, expressed as keyframes so JS can hang
+   the display:none/flex handoff off the phase boundary — where both panels are
+   invisible and the popup's height snap goes unseen. Durations here must stay in
+   lockstep with PANEL_OUT_MS / PANEL_IN_MS in popup.js.
+
+   Travel is short (8px out, 10px in) because the window is short: at 90ms a
+   longer throw reads as a jump rather than a slide. */
+
+@keyframes sfPanelOutLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-8px); }
+}
+
+@keyframes sfPanelOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(8px); }
+}
+
+@keyframes sfPanelInRight {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sfPanelInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.sf-panel-out-left  { animation: sfPanelOutLeft  0.09s ease both; }
+.sf-panel-out-right { animation: sfPanelOutRight 0.09s ease both; }
+.sf-panel-in-right  { animation: sfPanelInRight  0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.sf-panel-in-left   { animation: sfPanelInLeft   0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-header-brand,
+  .sf-header-settings,
+  .sf-gear-btn,
+  .sf-gear-ic,
+  body.sf-settings-open .sf-header-brand,
+  body.sf-settings-open .sf-header-settings,
+  body.sf-settings-open .sf-gear-btn,
+  .sf-panel-out-left,
+  .sf-panel-out-right,
+  .sf-panel-in-right,
+  .sf-panel-in-left {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .sf-gear-btn:hover .sf-gear-ic {
+    transform: none;
+  }
+}
+
+/* ─── Sort Feed MCP row (Instagram Settings › Claude) ───
+   Status line + one button, styled like .sf-dd-trigger. */
+/* Last section of the panel since 2026-10-22 (Display sits above it): the 14px gap
+   between sections lives on this section's top, so nothing trails under its card. */
+#igMcpSection {
+  margin-top: 14px;
+}
+/* Title + Beta tag + button share one 208px line: a tighter gap and a title that never wraps. */
+#igMcpSection .sf-dl-row {
+  gap: 8px;
+}
+#igMcpSection .sf-dl-title {
+  white-space: nowrap;
+}
+/* "Beta" — the app's standard Notion-style tag (same values as .sf-outlier-new / .zs-beta-tag) */
+.sf-mcp-beta {
+  margin-left: 5px;
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.38);
+}
+.sf-mcp-status {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: rgba(0,0,0,0.45);
+  margin-top: 2px;
+}
+.sf-mcp-status.is-on::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2e9e5b;
+  flex: none;
+}
+.sf-mcp-btn {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+.sf-mcp-btn:hover {
+  background: #f9f9f9;
+  border-color: rgba(0,0,0,0.2);
+}
+
