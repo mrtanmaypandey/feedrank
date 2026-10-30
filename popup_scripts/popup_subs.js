@@ -1,20 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Upgrade-click helper
+// Support URL
 ////////////////////////////////////////////////////////////////////////////////
 
-const SF_PRICING_URL = "https://buymeatea.in/bytanmay";
-
-function sfTrackUpgradeClick(eventName, meta = {}) {
-  try {
-    if (typeof DEBUG !== "undefined" && DEBUG) {
-      console.log("[analytics]", eventName, meta);
-    }
-    chrome.runtime.sendMessage(
-      { type: "SF_ANALYTICS", event: eventName, ...meta },
-      () => void chrome.runtime.lastError   // swallow "no receiver" errors
-    );
-  } catch (_) { /* analytics must never break the click */ }
-}
+const FEEDRANK_SUPPORT_URL = "https://buymeatea.in/bytanmay";
 
 ////////////////////////////////////////////////////////////////////////////////
 // custom dropdown logic (Notion-style)
@@ -429,28 +417,6 @@ function sfDatePanelInit(menu, dd, selectEl) {
 }
 
 // Ensure a dropdown menu has the free-state "Get Pro" nudge row as the last
-// item in its options list. IG ships it in the HTML; every other platform's
-// dropdowns (TikTok/Facebook/YouTube) get it injected here, so all free
-// dropdowns show the same upgrade row. sf_dd_lock()/unlock_all_options() toggle
-// its visibility, and the button's click is wired below in sf_dd_init().
-function sf_inject_get_pro_row(menu) {
-  if (!menu || menu.querySelector(".sf-dd-get-pro")) return;
-  const list = menu.querySelector(".sf-dd-options-list");
-  if (!list) return;
-  list.insertAdjacentHTML("beforeend",
-    '<div class="sf-dd-get-pro" style="display:none;">' +
-      '<div class="sf-dd-divider"></div>' +
-      '<button type="button" class="sf-dd-get-pro-btn" data-sf-upgrade="dropdown_row">' +
-        '<span class="sf-dd-get-pro-left">' +
-          '<span class="sf-dd-get-pro-icon" aria-hidden="true"></span>' +
-          '<span class="sf-dd-get-pro-label">Get Pro</span>' +
-        '</span>' +
-        '<span class="sf-dd-get-pro-arrow" aria-hidden="true"></span>' +
-      '</button>' +
-    '</div>'
-  );
-}
-
 function sf_dd_init() {
 
   Object.keys(SF_DD_MAP).forEach((ddId) => {
@@ -460,9 +426,6 @@ function sf_dd_init() {
     const trigger = dd.querySelector(".sf-dd-trigger");
     const menu    = dd.querySelector(".sf-dd-menu");
     const selectEl = document.getElementById(SF_DD_MAP[ddId]);
-
-    // Add the free-state Get Pro row (no-op for IG, which already has it in HTML).
-    sf_inject_get_pro_row(menu);
 
     // Apply the per-dropdown "Custom…" label (IG only) and stash it so the
     // reset/select helpers can restore it. Runs before first paint → no flash.
@@ -629,16 +592,6 @@ function sf_dd_init() {
     if (datePanel) {
       sfDatePanelInit(menu, dd, selectEl);
     }
-
-    // Upgrade row inside menu (Notion-style, free/signed-out only)
-    const getProBtn = dd.querySelector(".sf-dd-get-pro-btn");
-    if (getProBtn) {
-      getProBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        sfTrackUpgradeClick("upgrade_click_dropdown_row", { dropdown: ddId });
-        window.open(SF_PRICING_URL, "_blank");
-      });
-    }
   });
 
   // close on outside click
@@ -652,22 +605,10 @@ function sf_dd_init() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// feature gating — unlock all dropdown options & initialize UI
+// Initialize dropdown options & UI
 ////////////////////////////////////////////////////////////////////////////////
 
 function unlock_all_options() {
-  document.body.classList.remove("sf-locked");
-  ["sf-dd-ig-items","sf-dd-ig-dates","sf-dd-tt-items","sf-dd-tt-dates","sf-dd-fb-items","sf-dd-fb-dates","sf-dd-yt-items","sf-dd-yt-dates"].forEach((ddId) => {
-    const dd = document.getElementById(ddId);
-    if (!dd) return;
-    dd.querySelectorAll(".sf-dd-opt").forEach(opt => {
-      opt.classList.remove("sf-dd-locked");
-      opt.querySelector(".sf-dd-pro-pill")?.remove();
-    });
-    const getPro = dd.querySelector(".sf-dd-get-pro");
-    if (getPro) getPro.style.display = "none";
-  });
-
   ["no_reels_selected","dates_selected","no_reels_selected_tiktok","dates_selected_tiktok","no_reels_selected_facebook","dates_selected_facebook","no_reels_selected_youtube","dates_selected_youtube"].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
@@ -690,31 +631,12 @@ function sf_apply_custom_new_pills() {
 }
 
 function show_footer_based_on_state() { 
-  const sub = document.getElementById("subFooter");
-  if (sub) sub.style.display = "none";
-  const free = document.getElementById("FreeFooter");
-  if (free) free.style.display = "none";
-  const paid = document.getElementById("PaidFooter");
-  if (paid) paid.style.display = "none";
   const fr = document.getElementById("feedrankFooter");
   if (fr) fr.style.display = "flex";
-  document.body.classList.add("sf-paid");
 }
 
-function pro_tag_added() {
-  const betaSpan = document.querySelector('.beta');
-  if (betaSpan) betaSpan.style.display = 'none';
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   sf_dd_init();
   unlock_all_options();
-  pro_tag_added();
   show_footer_based_on_state();
-  try {
-    await chrome.storage.local.set({
-      sort_feed_state_type_flag: "pro",
-      sort_feed_user_id: null
-    });
-  } catch (_) {}
 });

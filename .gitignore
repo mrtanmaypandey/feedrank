@@ -29,3 +29,9 @@ package-lock.json
 .env
 .env.local
 *.log
+
+# Untracked foreign reports & archives
+ApplyAI_*
+open-applyai*
+applyai_analysis/
+*.zip

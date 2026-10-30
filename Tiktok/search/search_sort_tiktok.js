@@ -1,6 +1,6 @@
 // Page-world script — TikTok Search-results sorting (counterpart to
 // script_tiktok.js's profile flow). Wraps `fetch` for `/api/search/item/full`
-// and bails out unless `sortFeedSurfaceTikTok === "search"`, so the profile
+// and bails out unless `feedRankSurfaceTikTok === "search"`, so the profile
 // fetch hook in script_tiktok.js stays byte-identical.
 //
 // Architecture mirrors Instagram's explore_sort_instagram.js: a separate file,
@@ -47,7 +47,7 @@
 
   // ─── Stop Sorting — immediate abort ───────────────────────────────────
   // Mirrors script_tiktok.js's `_sfStopTk`, self-contained because this file
-  // is its own IIFE. The banner's Stop raises `sortFeedStopSorting` AND posts
+  // is its own IIFE. The banner's Stop raises `feedRankStopSorting` AND posts
   // `sf_stop_sorting`; the flag alone could only be polled, and the poll sits
   // *after* `await findElement`, which backs off across 12 attempts (~9s worst
   // case) plus a 1.2s media wait.
@@ -56,7 +56,7 @@
   function stopRequested() {
     if (sfStopSearch.requested) return true;
     try {
-      return sessionStorage.getItem("sortFeedStopSorting") === "on";
+      return sessionStorage.getItem("feedRankStopSorting") === "on";
     } catch (e) {
       return false;
     }
@@ -100,7 +100,7 @@
   window.addEventListener("message", (event) => {
     if (event.source !== window || !event.data || !event.data.sf_stop_sorting) return;
     // Search only — the profile and saved scripts get this same broadcast.
-    if (sessionStorage.getItem("sortFeedSurfaceTikTok") !== "search") return;
+    if (sessionStorage.getItem("feedRankSurfaceTikTok") !== "search") return;
     stopNow();
   });
 
@@ -190,8 +190,8 @@
     // Stop makes this wait inactive immediately — the flag read alone would
     // only be seen after the current sleep finished (up to 1.2s).
     const isActive = () =>
-      sessionStorage.getItem("sortFeedStatusTikTok") &&
-      sessionStorage.getItem("sortFeedSurfaceTikTok") === "search" &&
+      sessionStorage.getItem("feedRankStatusTikTok") &&
+      sessionStorage.getItem("feedRankSurfaceTikTok") === "search" &&
       !sfStopSearch.requested;
 
     // Abortable: Stop settles every pending sleep on the click's own tick.
@@ -321,7 +321,7 @@
   }
 
   function readTarget() {
-    const value = sessionStorage.getItem("sortFeedNoItems") || "";
+    const value = sessionStorage.getItem("feedRankNoItems") || "";
     if (value === "all_reels") return 10000; // blocked upstream, defensive cap
     const m = value.match(/^(\d+)_reels$/);
     return m ? parseInt(m[1], 10) : 25;
@@ -352,11 +352,11 @@
     if (sfSortFinalized) return;
     sfSortFinalized = true;
 
-    sessionStorage.removeItem("sortFeedStopSorting");
-    sessionStorage.removeItem("sortFeedStatusTikTok");
+    sessionStorage.removeItem("feedRankStopSorting");
+    sessionStorage.removeItem("feedRankStatusTikTok");
     // Blocks subsequent search fetches with a synthetic empty response so
     // TikTok's native infinite-scroll spinner stays dead after the sort.
-    sessionStorage.setItem("sortFeedSortDoneTikTok", "true");
+    sessionStorage.setItem("feedRankSortDoneTikTok", "true");
 
     const list = Array.isArray(collected) ? collected : [];
 
@@ -368,7 +368,7 @@
       return;
     }
 
-    const sortBy = sessionStorage.getItem("sortFeedSortBy");
+    const sortBy = sessionStorage.getItem("feedRankSortBy");
     const sorted = sortItems(list, sortBy);
 
     removeBanner();
@@ -387,7 +387,7 @@
         // from being answered out of the "tea" grid.
         sf_ctx: {
           mode: sessionStorage.getItem("sortItemsVsDates"),
-          selection: sessionStorage.getItem("sortFeedNoItems"),
+          selection: sessionStorage.getItem("feedRankNoItems"),
           sortBy: sortBy,
           surface: "search",
           path: location.pathname,
@@ -430,7 +430,7 @@
       meta._sfSeq = sfSearchMemory.items.length;
       sfSearchMemory.items.push(meta);
 
-      if (!sessionStorage.getItem("sortFeedStatusTikTok")) {
+      if (!sessionStorage.getItem("feedRankStatusTikTok")) {
         return sfSearchMemory.items;
       }
 
@@ -438,24 +438,24 @@
       notifyBanner(sfSearchMemory.items.length);
 
       // Case 00 — user clicked Stop Sorting on the in-page banner
-      if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatusTikTok");
+      if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatusTikTok");
         removeBanner();
         return sfSearchMemory.items;
       }
 
       // Case 01 — collected the user's chosen count
       if (sfSearchMemory.items.length >= target) {
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatusTikTok");
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatusTikTok");
         return sfSearchMemory.items;
       }
 
       // Case 02 — last item of the batch, no more pages from TikTok
       if (i === items.length - 1 && !hasMore) {
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatusTikTok");
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatusTikTok");
         return sfSearchMemory.items;
       }
 
@@ -497,7 +497,7 @@
     // Endpoint-aware body: /general/full uses `data: []`, the others use
     // `item_list: []`. Returning the wrong shape would risk crashing the
     // React app when it tries to read fields that aren't there.
-    if (isSearch && sessionStorage.getItem("sortFeedSortDoneTikTok") === "true") {
+    if (isSearch && sessionStorage.getItem("feedRankSortDoneTikTok") === "true") {
       const body = url.includes("/general/full")
         ? '{"status_code":0,"data":[],"has_more":0}'
         : '{"status_code":0,"item_list":[],"has_more":0}';
@@ -513,8 +513,8 @@
 
     try {
       if (
-        sessionStorage.getItem("sortFeedSurfaceTikTok") !== "search" ||
-        !sessionStorage.getItem("sortFeedStatusTikTok")
+        sessionStorage.getItem("feedRankSurfaceTikTok") !== "search" ||
+        !sessionStorage.getItem("feedRankStatusTikTok")
       ) {
         return res;
       }
@@ -585,7 +585,7 @@
   window.addEventListener("message", (event) => {
     if (
       event.source === window &&
-      event.data?.source === "sortfeed" &&
+      event.data?.source === "feedrank" &&
       event.data?.type === "reset_tiktok_session"
     ) {
       sfSearchMemory.items = [];

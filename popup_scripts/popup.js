@@ -46,9 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   initOutlierPreviewUI(); // 🚩 Outlier score preview (IG only, gated by outlierFlag)
 
-  // change this to go to the website instead
-  // chrome.runtime.sendMessage({ action: "runUserCheckPro" });
-  // if (DBUG) console.log("[Popup] Sent runUserCheckPro");
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     let currentTab = tabs[0];
@@ -595,7 +592,7 @@ document.getElementById("sortOldestClicks")?.addEventListener("click", () => han
 ////////////////////////////////////////////////////////////////////////////////
 // YouTube sort clicks — Phase 0.5 (gating only)
 ////////////////////////////////////////////////////////////////////////////////
-// Sends refresh:'ON_YouTube'; the content script (init_sortfeed_youtube.js)
+// Sends refresh:'ON_YouTube'; the content script (YouTube/content.js)
 // validates the surface and either shows a popup warning or no-ops on the happy
 // path. Outlier score is a real sort (sort_by "outlier", views-based on both
 // tabs) — mirrors handleFacebookOutlierClick.
@@ -636,8 +633,8 @@ document.getElementById("sortOutlierClickYoutube")?.addEventListener("click", ()
 ////////////////////////////////////////////////////////////////////////////////
 // Mirrors handleInstagramSortClick / handleTikTokSortClick. The surface error
 // gate (reels-tab vs profile vs elsewhere) lives in the content script
-// (Facebook/init_sortfeed_facebook.js, Phase 3) and bounces back to the popup
-// error renderer via `sort_feed_error`, exactly like IG/TikTok.
+// (Facebook/content.js) and bounces back to the popup
+// error renderer via `feedrank_error`, exactly like IG/TikTok.
 
 function handleFacebookSortClick(sort_by) {
   const no_reels_selected_input = document.getElementById("no_reels_selected_facebook");
@@ -677,7 +674,7 @@ function handleFacebookSortClick(sort_by) {
 }
 
 // Facebook Outlier score row → a real sort with sort_by "outlier". The surface
-// gate (profile Reels tab only) lives in Facebook/init_sortfeed_facebook.js and
+// gate (profile Reels tab only) lives in Facebook/content.js and
 // bounces non-profile-Reels surfaces back to the popup with their own toast.
 function handleFacebookOutlierClick() {
   handleFacebookSortClick("outlier");
@@ -688,19 +685,6 @@ document.getElementById("sortLikesClickFacebook")?.addEventListener("click", () 
 document.getElementById("sortSharesClickFacebook")?.addEventListener("click", () => handleFacebookSortClick("shares"));
 document.getElementById("sortCommentsClickFacebook")?.addEventListener("click", () => handleFacebookSortClick("comments"));
 document.getElementById("sortOldestClicksFacebook")?.addEventListener("click", () => handleFacebookSortClick("oldest"));
-
-////////////////////////////////////////////////////////////////////////////////
-// get user status from background script
-////////////////////////////////////////////////////////////////////////////////
-
-function checkUserStatus(callback) {
-  if (DBUG) console.log("[User] checkUserStatus -> sending message");
-  chrome.runtime.sendMessage({ command: 'checkProStatus' }, (response) => {
-    const isPro = response?.isPro;
-    if (DBUG) console.log("[User] checkProStatus response:", response);
-    callback(isPro);
-  });
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Add Be Back Messsage for TikTok! 
@@ -792,149 +776,6 @@ function ensureExitAnimStyle() {
   if (DBUG) console.log("[Style] ensureExitAnimStyle injected");
 }
 
-// function feature_banner() {
-//   chrome.runtime.sendMessage({ command: 'checkProStatus' }, (response) => {
-//     if (DBUG) console.log("[Banner] checkProStatus response:", response);
-
-//     const banner = document.querySelector(".footer_div_again_sub_feature");
-//     const closeIcon = document.querySelector(".close_banner_icon");
-
-//     const cutoff = new Date("2026-01-01");
-//     const today = new Date();
-//     const bannerClosed = localStorage.getItem("bannerClosedSortFeedSelect");
-//     if (DBUG) console.log("[Banner] state", { today, cutoff, bannerClosed });
-
-//     if (bannerClosed === "true" || today >= cutoff) {
-//       if (banner) banner.style.display = "none";
-//       if (DBUG) console.log("[Banner] hidden (closed or past cutoff)");
-//       return;
-//     }
-
-//     if (banner) banner.style.display = ""; // show when allowed
-
-//     if (closeIcon && banner && !banner.dataset.bound) {
-//       banner.dataset.bound = "1";
-//       closeIcon.addEventListener("click", () => {
-//         if (DBUG) console.log("[Banner] close clicked");
-//         localStorage.setItem("bannerClosedSortFeedSelect", "true");
-//         ensureExitAnimStyle();
-//         banner.classList.add("sf-exit-right");
-
-//         const done = () => {
-//           banner.style.display = "none";
-//           banner.classList.remove("sf-exit-up");
-//           banner.removeEventListener("animationend", done);
-//           clearTimeout(fallback);
-//           if (DBUG) console.log("[Banner] closed + removed");
-//         };
-//         banner.addEventListener("animationend", done, { once: true });
-//         const fallback = setTimeout(done, 600);
-//       }, { once: true });
-//     }
-
-//     if (!response?.isPro) {
-//       document.querySelector(".footer_text_again_subheader_sub_bottom").textContent =
-//         // "Sort Feed now remembers your last sort, no need to reselect again.";
-//         banner.style.display = "none";
-//       if (DBUG) console.log("[Banner] copy set (non-Pro)");
-//     } else {
-//       document.querySelector(".footer_text_again_subheader_sub_bottom").textContent =
-//         "Sort Feed now remembers your last sort, no need to reselect again.";
-//       if (DBUG) console.log("[Banner] copy set (Pro)");
-//     }
-//   });
-// }
-
-// function feature_banner(mode) {
-//   // mode: "insta" or "tiktok"
-//   const root = mode === "tiktok"
-//     ? document.querySelector(".TikTokMain")
-//     : document.querySelector(".InstaMain");
-
-//   if (!root) return;
-
-//   const banner   = root.querySelector(".footer_div_again_sub_feature");
-//   const closeIcon = root.querySelector(".close_banner_icon");
-//   const textEl   = root.querySelector(".footer_text_again_subheader_sub_bottom");
-
-//   if (!banner || !closeIcon || !textEl) return;
-
-//   const cutoff = new Date("2026-02-01");
-//   const today = new Date();
-//   const bannerClosed = localStorage.getItem("bannerClosedSortFeedSelect");
-
-//   if (bannerClosed === "true" || today >= cutoff) {
-//     banner.style.display = "none";
-//     return;
-//   }
-
-//   // show banner
-//   banner.style.display = "";
-
-//   // close handler (same logic as before, just scoped)
-//   if (!banner.dataset.bound) {
-//     banner.dataset.bound = "1";
-//     closeIcon.addEventListener("click", () => {
-//       localStorage.setItem("bannerClosedSortFeedSelect", "true");
-//       ensureExitAnimStyle();
-//       banner.classList.add("sf-exit-right");
-
-//       const done = () => {
-//         banner.style.display = "none";
-//         banner.classList.remove("sf-exit-right");
-//       };
-
-//       banner.addEventListener("animationend", done, { once: true });
-//       setTimeout(done, 600);
-//     }, { once: true });
-//   }
-
-//   // copy depends on Pro / non-Pro
-//   chrome.runtime.sendMessage({ command: 'checkProStatus' }, (response) => {
-//     if (!response?.isPro) {
-//       banner.style.display = "none";
-//     } else {
-//       textEl.textContent = "We now support all browsers. If you've bought Pro, sign in with the same email.";
-//     }
-//   });
-// }
-// localStorage.removeItem("bannerClosedSortFeedSelect2")
-
-// function feature_banner() {
-//   const banner = document.querySelector(".footer_div_again_sub_feature");
-//   const closeIcon = document.querySelector(".close_banner_icon");
-//   if (!banner || !closeIcon) return;
-
-//   const cutoff = new Date("2026-03-15");
-//   const today = new Date();
-//   const bannerClosed = localStorage.getItem("bannerClosedSortFeedSelect2");
-
-//   if (bannerClosed === "true" || today >= cutoff) {
-//     banner.style.display = "none";
-//     return;
-//   }
-
-//   // ✅ show banner (do NOT overwrite text)
-//   banner.style.display = "";
-
-//   // ✅ close handler
-//   if (!banner.dataset.bound) {
-//     banner.dataset.bound = "1";
-//     closeIcon.addEventListener("click", () => {
-//       localStorage.setItem("bannerClosedSortFeedSelect2", "true");
-//       ensureExitAnimStyle();
-//       banner.classList.add("sf-exit-right");
-
-//       const done = () => {
-//         banner.style.display = "none";
-//         banner.classList.remove("sf-exit-right");
-//       };
-
-//       banner.addEventListener("animationend", done, { once: true });
-//       setTimeout(done, 600);
-//     }, { once: true });
-//   }
-// }
 
 async function feature_banner(mode) {
   const banner = document.querySelector(".footer_div_again_sub_feature");
@@ -946,7 +787,7 @@ async function feature_banner(mode) {
   };
 
   // One announcement only: the Similar accounts note, on the zero state and on Instagram (it replaced the
-  // Sort Feed MCP note on 2026-10-08; the strip holds one note at a time). TikTok, YouTube and Facebook
+  // FeedRank note; the strip holds one note at a time). TikTok, YouTube and Facebook
   // show no banner (the player notes that used to live here are retired — user's call 2026-09-24).
   // The note is a Notion-style callout: a wash of the brand yellow, one line ("New:" a step darker than the
   // sentence it leads), and the whole block as the link. It shows to everyone, signed in or not, and opens
@@ -1453,7 +1294,7 @@ function _sfSwapBannerText(el, text, selector) {
 }
 
 // Red slide-in banner at the top of the popup. Used by the sort-error listener
-// below, the Outlier preview, and (via show_error_banner) the license flow.
+
 //
 // A second warning arriving while one is up REPLACES it in place, immediately.
 // It used to no-op — so after any error the popup ignored the next one for
@@ -1601,7 +1442,7 @@ const SF_RESORT_TOAST = true;
 
 chrome.runtime.onMessage.addListener((message) => {
   if (!SF_RESORT_TOAST) return;
-  if (!message || !message.sort_feed_resorted) return;
+  if (!message || !message.feedrank_resorted) return;
   const text = _sfResortedMessage(message);
   if (DBUG) console.log("[Re-sort] confirmation:", text, message);
   showPopupResorted(text);
@@ -1726,7 +1567,7 @@ function initOutlierPreviewUI() {
 ////////////////////////////////////////////////////////////////////////////////
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.sort_feed_error) {
+  if (message.feedrank_error) {
     let error_text = "";
 
     // 'back_to_back_sorting' is fully retired (2026-08-14). A second sort is now
@@ -1888,52 +1729,52 @@ function default_sort_selection() {
   }
 
   // IG items
-  const igItems = localStorage.getItem("sortfeed_ig_items")
+  const igItems = localStorage.getItem("feedrank_ig_items")
   if (igItems) {
     syncCustomDropdown("sf-dd-ig-items", "no_reels_selected", igItems);
   }
 
   // IG dates
-  const igDates = localStorage.getItem("sortfeed_ig_dates")
+  const igDates = localStorage.getItem("feedrank_ig_dates")
   if (igDates) {
     const el = document.getElementById("dates_selected")
     if (el) { el.value = igDates; syncCustomDropdown("sf-dd-ig-dates", "dates_selected", igDates); }
   }
 
   // TikTok items
-  const ttItems = localStorage.getItem("sortfeed_tiktok_items")
+  const ttItems = localStorage.getItem("feedrank_tiktok_items")
   if (ttItems) {
     syncCustomDropdown("sf-dd-tt-items", "no_reels_selected_tiktok", ttItems);
   }
 
   // TikTok dates
-  const ttDates = localStorage.getItem("sortfeed_tiktok_dates")
+  const ttDates = localStorage.getItem("feedrank_tiktok_dates")
   if (ttDates) {
     const el = document.getElementById("dates_selected_tiktok")
     if (el) { el.value = ttDates; syncCustomDropdown("sf-dd-tt-dates", "dates_selected_tiktok", ttDates); }
   }
 
   // Facebook items
-  const fbItems = localStorage.getItem("sortfeed_fb_items")
+  const fbItems = localStorage.getItem("feedrank_fb_items")
   if (fbItems) {
     syncCustomDropdown("sf-dd-fb-items", "no_reels_selected_facebook", fbItems);
   }
 
   // Facebook dates
-  const fbDates = localStorage.getItem("sortfeed_fb_dates")
+  const fbDates = localStorage.getItem("feedrank_fb_dates")
   if (fbDates) {
     const el = document.getElementById("dates_selected_facebook")
     if (el) { el.value = fbDates; syncCustomDropdown("sf-dd-fb-dates", "dates_selected_facebook", fbDates); }
   }
 
   // YouTube items
-  const ytItems = localStorage.getItem("sortfeed_yt_items")
+  const ytItems = localStorage.getItem("feedrank_yt_items")
   if (ytItems) {
     syncCustomDropdown("sf-dd-yt-items", "no_reels_selected_youtube", ytItems);
   }
 
   // YouTube dates
-  const ytDates = localStorage.getItem("sortfeed_yt_dates")
+  const ytDates = localStorage.getItem("feedrank_yt_dates")
   if (ytDates) {
     const el = document.getElementById("dates_selected_youtube")
     if (el) { el.value = ytDates; syncCustomDropdown("sf-dd-yt-dates", "dates_selected_youtube", ytDates); }
@@ -1954,36 +1795,36 @@ function setupDropdownLogger(id) {
   el.addEventListener("change", () => {
     // IG items selection 
     if (id==='no_reels_selected') {
-      localStorage.setItem("sortfeed_ig_items", el.value); 
+      localStorage.setItem("feedrank_ig_items", el.value); 
     } 
     // IG date selection 
     else if (id==='dates_selected') { 
-       localStorage.setItem("sortfeed_ig_dates", el.value); 
+       localStorage.setItem("feedrank_ig_dates", el.value); 
     }
     // tiktok items selection 
     else if (id==='no_reels_selected_tiktok') {
 
-       localStorage.setItem("sortfeed_tiktok_items", el.value); 
+       localStorage.setItem("feedrank_tiktok_items", el.value); 
     } 
     // tiktok date selection
     else if (id==='dates_selected_tiktok') {
-       localStorage.setItem("sortfeed_tiktok_dates", el.value);
+       localStorage.setItem("feedrank_tiktok_dates", el.value);
     }
     // facebook items selection
     else if (id==='no_reels_selected_facebook') {
-       localStorage.setItem("sortfeed_fb_items", el.value);
+       localStorage.setItem("feedrank_fb_items", el.value);
     }
     // facebook date selection
     else if (id==='dates_selected_facebook') {
-       localStorage.setItem("sortfeed_fb_dates", el.value);
+       localStorage.setItem("feedrank_fb_dates", el.value);
     }
     // youtube items selection
     else if (id==='no_reels_selected_youtube') {
-       localStorage.setItem("sortfeed_yt_items", el.value);
+       localStorage.setItem("feedrank_yt_items", el.value);
     }
     // youtube date selection
     else if (id==='dates_selected_youtube') {
-       localStorage.setItem("sortfeed_yt_dates", el.value);
+       localStorage.setItem("feedrank_yt_dates", el.value);
     }
   })
 }
@@ -2003,13 +1844,13 @@ setupDropdownLogger("dates_selected_youtube");
 ////////////////////////////////////////////////////////////////////////////////
 
 const TOGGLE_KEYS = {
-  igSaveToggle:       'sortfeed_ig_save_enabled',   // Instagram/save/save_button_instagram.js
-  igDownloadToggle:   'sortfeed_ig_download_enabled',
-  igTranscribeToggle: 'sortfeed_ig_transcribe_enabled',
-  ttDownloadToggle:   'sortfeed_tiktok_download_enabled',
-  ttTranscribeToggle: 'sortfeed_tiktok_transcribe_enabled',
-  fbDownloadToggle:   'sortfeed_fb_download_enabled',
-  fbTranscribeToggle: 'sortfeed_fb_transcribe_enabled',
+  igSaveToggle:       'feedrank_ig_save_enabled',
+  igDownloadToggle:   'feedrank_ig_download_enabled',
+  igTranscribeToggle: 'feedrank_ig_transcribe_enabled',
+  ttDownloadToggle:   'feedrank_tiktok_download_enabled',
+  ttTranscribeToggle: 'feedrank_tiktok_transcribe_enabled',
+  fbDownloadToggle:   'feedrank_fb_download_enabled',
+  fbTranscribeToggle: 'feedrank_fb_transcribe_enabled',
 };
 
 function restoreToggleStates() {

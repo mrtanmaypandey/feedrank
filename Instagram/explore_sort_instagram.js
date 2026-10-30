@@ -3,7 +3,7 @@
 // metadata shape the profile flow uses, so banner / hover / export / download
 // helpers all work unchanged.
 //
-// Gated on `sessionStorage.sortFeedSurface === "explore_search"` so it stays
+// Gated on `sessionStorage.feedRankSurface === "explore_search"` so it stays
 // completely dormant during a profile sort.
 
 const SF_EXPLORE_DEBUG = false;
@@ -26,7 +26,7 @@ function sfExploreSaveLocally(meta) {
 // because the three page-world scripts are injected as independent <script> tags
 // with no guaranteed execution order.
 //
-// The banner's Stop button raises the `sortFeedStopSorting` flag AND posts
+// The banner's Stop button raises the `feedRankStopSorting` flag AND posts
 // `sf_stop_sorting`. The flag alone could only be polled — and the poll sits
 // *after* `await sfExploreFindElement`, which spends up to ~1.2s hunting the
 // anchor plus ~1.4s waiting for the tile's media before returning. This registry
@@ -39,7 +39,7 @@ const sfExploreStop = {
 function sfExploreStopRequested() {
   if (sfExploreStop.requested) return true;
   try {
-    return sessionStorage.getItem("sortFeedStopSorting") === "on";
+    return sessionStorage.getItem("feedRankStopSorting") === "on";
   } catch (e) {
     return false;
   }
@@ -88,7 +88,7 @@ function sfExploreStopNow() {
 window.addEventListener("message", (event) => {
   if (event.source !== window || !event.data || !event.data.sf_stop_sorting) return;
   // Explore search only — the profile and saved scripts get this same broadcast.
-  if (sessionStorage.getItem("sortFeedSurface") !== "explore_search") return;
+  if (sessionStorage.getItem("feedRankSurface") !== "explore_search") return;
   sfExploreStopNow();
 });
 
@@ -220,7 +220,7 @@ function sfExploreSortItems(data, sortBy) {
 }
 
 function sfExploreReadTarget() {
-  const raw = sessionStorage.getItem("sortFeedNoItems") || "";
+  const raw = sessionStorage.getItem("feedRankNoItems") || "";
   // "all_reels" is blocked upstream — defensive cap so a sort can still end.
   if (raw === "all_reels") return 10000;
   const n = parseInt(raw.replace("_reels", ""), 10);
@@ -258,8 +258,8 @@ function sfExploreRemoveBannerAndOverlay() {
 }
 
 function sfExploreFinishSort() {
-  sessionStorage.removeItem("sortFeedStopSorting");
-  sessionStorage.removeItem("sortFeedStatus");
+  sessionStorage.removeItem("feedRankStopSorting");
+  sessionStorage.removeItem("feedRankStatus");
 }
 
 // Process one /graphql/query response. Accumulates into `sfExploreMemory` and
@@ -271,13 +271,13 @@ async function sfExploreProcessBatch(jsonResponse, nextPage, target) {
   const flatItems = sfExploreFlattenSerp(serp);
   if (SF_EXPLORE_DEBUG) {
     console.log(
-      "[SortFeed][explore] batch — flat items:", flatItems.length,
+      "[FeedRank][explore] batch — flat items:", flatItems.length,
       "next?:", nextPage, "target:", target,
     );
   }
 
   for (let i = 0; i < flatItems.length; i++) {
-    if (!sessionStorage.getItem("sortFeedStatus")) {
+    if (!sessionStorage.getItem("feedRankStatus")) {
       return sfExploreMemory.items;
     }
 
@@ -298,7 +298,7 @@ async function sfExploreProcessBatch(jsonResponse, nextPage, target) {
     sfExploreNotifyCollected(items.length);
     sfExploreNotifyBanner(items.length);
 
-    if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
+    if (sessionStorage.getItem("feedRankStopSorting") === "on") {
       sfExploreFinishSort();
       return items;
     }
@@ -321,7 +321,7 @@ async function sfExploreProcessBatch(jsonResponse, nextPage, target) {
 
 // Once a sort completes we must never finalize again — a second
 // `logo_animate_off` would re-render the banner *after* the content script has
-// cleared `sortFeedSortBy` / `sortItemsVsDates`, producing an "undefined"
+// cleared `feedRankSortBy` / `sortItemsVsDates`, producing an "undefined"
 // banner. `sfExploreDone` latches completion; `sfExploreChain` serializes
 // per-page batches so two graphql responses can't process concurrently and
 // both reach the target. Both reset naturally — every sort reloads the page.
@@ -349,12 +349,12 @@ function sfExploreFinalize(items) {
     return;
   }
 
-  const sortBy = sessionStorage.getItem("sortFeedSortBy");
+  const sortBy = sessionStorage.getItem("feedRankSortBy");
   const sorted = sfExploreSortItems(list, sortBy);
 
   if (SF_EXPLORE_DEBUG) {
     console.log(
-      "[SortFeed][explore] sort complete —",
+      "[FeedRank][explore] sort complete —",
       sorted.length, "items, sorted by", sortBy,
     );
   }
@@ -366,7 +366,7 @@ function sfExploreFinalize(items) {
   // pathname and must not be mistaken for each other.
   const sfCtx = {
     mode: "items",
-    selection: sessionStorage.getItem("sortFeedNoItems"),
+    selection: sessionStorage.getItem("feedRankNoItems"),
     sortBy: sortBy,
     tab: "Posts",
     surface: "explore_search",
@@ -408,8 +408,8 @@ function sfExploreIsGraphqlUrl(url) {
 function sfExploreDispatch(responseText, url, transport) {
   if (sfExploreDone) return;
 
-  const surface = sessionStorage.getItem("sortFeedSurface");
-  const status = sessionStorage.getItem("sortFeedStatus");
+  const surface = sessionStorage.getItem("feedRankSurface");
+  const status = sessionStorage.getItem("feedRankStatus");
 
   if (surface !== "explore_search") return;
   if (!status) return;
@@ -420,7 +420,7 @@ function sfExploreDispatch(responseText, url, transport) {
     jsonResponse = JSON.parse(responseText);
   } catch (e) {
     if (SF_EXPLORE_DEBUG) {
-      console.warn("[SortFeed][explore][" + transport + "] JSON.parse failed:", e);
+      console.warn("[FeedRank][explore][" + transport + "] JSON.parse failed:", e);
     }
     return;
   }
@@ -429,7 +429,7 @@ function sfExploreDispatch(responseText, url, transport) {
   if (!serp) {
     if (SF_EXPLORE_DEBUG) {
       console.log(
-        "[SortFeed][explore][" + transport + "] no SERP key on this response.",
+        "[FeedRank][explore][" + transport + "] no SERP key on this response.",
         "data keys:", Object.keys(jsonResponse?.data || {}),
       );
     }
@@ -439,7 +439,7 @@ function sfExploreDispatch(responseText, url, transport) {
   const edges = serp?.edges || [];
   if (SF_EXPLORE_DEBUG) {
     console.log(
-      "[SortFeed][explore][" + transport + "] SERP found —",
+      "[FeedRank][explore][" + transport + "] SERP found —",
       "edges:", edges.length,
       "edge typenames:", edges.map((e) => e?.node?.__typename),
       "has_next_page:", serp?.page_info?.has_next_page,
@@ -462,7 +462,7 @@ function sfExploreDispatch(responseText, url, transport) {
 
 // XHR wrap — handles the case where IG uses XMLHttpRequest for the search
 // GraphQL query. Leaves profile sorts to script_instagram.js (which gates on
-// `sortFeedSurface !== "explore_search"`).
+// `feedRankSurface !== "explore_search"`).
 (function () {
   const originalOpen = XMLHttpRequest.prototype.open;
   const originalSend = XMLHttpRequest.prototype.send;
@@ -499,7 +499,7 @@ function sfExploreDispatch(responseText, url, transport) {
     if (!sfExploreIsGraphqlUrl(url)) return fetchPromise;
     // Stay completely dormant outside an explore-search sort — don't clone /
     // read unrelated GraphQL responses during profile or saved sorts.
-    if (sessionStorage.getItem("sortFeedSurface") !== "explore_search") return fetchPromise;
+    if (sessionStorage.getItem("feedRankSurface") !== "explore_search") return fetchPromise;
 
     fetchPromise
       .then((response) => {
@@ -510,12 +510,12 @@ function sfExploreDispatch(responseText, url, transport) {
             .then((text) => sfExploreDispatch(text, url, "fetch"))
             .catch((e) => {
               if (SF_EXPLORE_DEBUG) {
-                console.warn("[SortFeed][explore][fetch] text() failed:", e);
+                console.warn("[FeedRank][explore][fetch] text() failed:", e);
               }
             });
         } catch (e) {
           if (SF_EXPLORE_DEBUG) {
-            console.warn("[SortFeed][explore][fetch] clone failed:", e);
+            console.warn("[FeedRank][explore][fetch] clone failed:", e);
           }
         }
       })

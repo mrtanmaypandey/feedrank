@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Tanmay
+Copyright (c) 2026 Tanmay (for modifications, community rewrite, and client-side decoupling)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+DISCLAIMER & THIRD-PARTY NOTICES:
+FeedRank is an independent, non-commercial community open-source browser utility. It operates 100% locally within the client browser without any external proprietary backend services, tracking, or commercial servers. FeedRank is not affiliated with, authorized, maintained, sponsored, or endorsed by Meta Platforms (Instagram, Facebook), ByteDance (TikTok), Alphabet / Google (YouTube), or any commercial extension providers. All registered trademarks and service marks belong to their respective owners.

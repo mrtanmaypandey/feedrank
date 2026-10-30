@@ -116,6 +116,12 @@ If you find FeedRank helpful, consider supporting its continued development:
 
 ---
 
+## ⚖️ Disclaimer
+
+FeedRank is an independent, non-commercial, open-source browser utility developed for personal productivity and research. It is completely decoupled from any third-party commercial services and has no affiliation with Meta Platforms (Instagram, Facebook), ByteDance (TikTok), Alphabet / Google (YouTube), or any commercial extension providers. All feed ranking and spreadsheet exports operate 100% locally on the client machine.
+
+---
+
 ## 📄 License
 
-Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+Distributed under the MIT License for all community modifications, decoupling, and client-side restructuring. See [`LICENSE`](LICENSE) for complete terms and third-party notices.

@@ -1,8 +1,6 @@
 /* ============================================================================
-   Sort Feed — shared banner primitives
-   Used by download, transcribe, google sheets, and future banners.
-   The legacy .sort-banner keeps its own styles (defined in banner_on_insta.js
-   and banner_on_tiktok.js) and is NOT affected by anything here.
+   FeedRank — shared banner primitives
+   Used by download, export, and notifications.
    ============================================================================ */
 
 /* Enter — slide down from above with subtle elastic overshoot */
@@ -484,16 +482,7 @@
   .sf-banner .sf-message { font-size: 14px; }
 }
 
-/* ── Sort Feed logo visibility, ALL PLATFORMS (no .sf-on-* gate: FB/YT ride
-   the sf-on-ig tag, TikTok joined 2026-08-24).
-   Hidden while something is in flight or just landed: every DOWNLOAD banner
-   (single, batch, ZIP, error) and the TRANSCRIBE family's live states — the
-   progress bar (single transcriptions and Select missions) and the
-   transcript-ready card.
-   Shown, frozen, on the transcribe family's static notices — limit, errors,
-   the mission partial-failure summary, the Select cap and the signed-out
-   sign-in banner — so they read as Sort Feed speaking, not a bare toast.
-   Sort, Google Sheets and Pro banners keep the logo as before. ── */
+/* ── FeedRank logo visibility, ALL PLATFORMS ── */
 .sf-download-banner .sf-icon,
 .sf-trans-banner.sf-progress .sf-icon,
 .sf-trans-banner.sf-ready .sf-icon { display: none; }

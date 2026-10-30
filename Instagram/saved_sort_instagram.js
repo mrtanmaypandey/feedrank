@@ -40,7 +40,7 @@
 //   - View count for reels lives on `play_count` (not `view_count`).
 //   - Pagination uses `more_available` (boolean), not `page_info.has_next_page`.
 //
-// Gated on `sessionStorage.sortFeedSurface === "saved"` so it stays dormant
+// Gated on `sessionStorage.feedRankSurface === "saved"` so it stays dormant
 // during Profile or Search sorts.
 
 const SF_SAVED_DEBUG = false;
@@ -81,7 +81,7 @@ function sfSavedNormalizeGraphql(json) {
     if (n) {
       const scalars = {};
       Object.keys(n).forEach((k) => { const v = n[k]; if (v === null || typeof v !== "object") scalars[k] = v; });
-      console.log("[SortFeed][saved] GraphQL collection page —", coll.name, "| edges:", items.length, "| has_next_page:", pi.has_next_page, "| first node scalars:", scalars, "| user:", n.user?.username, "owner:", n.owner?.username);
+      console.log("[FeedRank][saved] GraphQL collection page —", coll.name, "| edges:", items.length, "| has_next_page:", pi.has_next_page, "| first node scalars:", scalars, "| user:", n.user?.username, "owner:", n.owner?.username);
     }
   }
   return {
@@ -106,7 +106,7 @@ function sfSavedSaveLocally(meta) {
   if (meta.postID != null) {
     const dup = sfSavedMemory.items.some((m) => m.postID === meta.postID);
     if (dup) {
-      if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] saveLocally — DUPLICATE pk", meta.postID, "code", meta.code, "— skipping");
+      if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] saveLocally — DUPLICATE pk", meta.postID, "code", meta.code, "— skipping");
       return sfSavedMemory.items;
     }
   }
@@ -124,7 +124,7 @@ function sfSavedSaveLocally(meta) {
 // because the three page-world scripts are injected as independent <script> tags
 // with no guaranteed execution order.
 //
-// The banner's Stop button raises the `sortFeedStopSorting` flag AND posts
+// The banner's Stop button raises the `feedRankStopSorting` flag AND posts
 // `sf_stop_sorting`. The flag alone could only be polled — and the poll sits
 // *after* `await sfSavedFindElement`, which spends up to ~3s hunting the anchor
 // plus ~3.2s waiting for the tile's media before returning. This registry
@@ -137,7 +137,7 @@ const sfSavedStop = {
 function sfSavedStopRequested() {
   if (sfSavedStop.requested) return true;
   try {
-    return sessionStorage.getItem("sortFeedStopSorting") === "on";
+    return sessionStorage.getItem("feedRankStopSorting") === "on";
   } catch (e) {
     return false;
   }
@@ -186,7 +186,7 @@ function sfSavedStopNow() {
 window.addEventListener("message", (event) => {
   if (event.source !== window || !event.data || !event.data.sf_stop_sorting) return;
   // Saved only — the profile and explore scripts get this same broadcast.
-  if (sessionStorage.getItem("sortFeedSurface") !== "saved") return;
+  if (sessionStorage.getItem("feedRankSurface") !== "saved") return;
   sfSavedStopNow();
 });
 
@@ -257,7 +257,7 @@ function sfSavedFlattenItems(response) {
   }
   if (SF_SAVED_DEBUG) {
     console.log(
-      "[SortFeed][saved] flattenItems — total items:", items.length,
+      "[FeedRank][saved] flattenItems — total items:", items.length,
       "valid media:", out.length,
       "invalid (filtered):", invalidCount,
     );
@@ -303,18 +303,18 @@ function sfSavedFindElement(code, retries = 30, interval = 100) {
         const checkMediaLoaded = () => {
           if (waiter.settled) return;
           if (hasVisualMedia()) {
-            if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] findElement", code, "→ FOUND with media in", Date.now() - startedAt, "ms");
+            if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] findElement", code, "→ FOUND with media in", Date.now() - startedAt, "ms");
             sfSavedSettle(waiter, parentDiv);
           } else if (retries-- > 0) {
             waiter.timer = setTimeout(checkMediaLoaded, interval);
           } else {
-            if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] findElement", code, "→ FOUND but media never loaded after", Date.now() - startedAt, "ms");
+            if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] findElement", code, "→ FOUND but media never loaded after", Date.now() - startedAt, "ms");
             sfSavedSettle(waiter, parentDiv);
           }
         };
 
         if (hasVisualMedia()) {
-          if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] findElement", code, "→ FOUND immediately in", Date.now() - startedAt, "ms");
+          if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] findElement", code, "→ FOUND immediately in", Date.now() - startedAt, "ms");
           sfSavedSettle(waiter, parentDiv);
         } else {
           waiter.timer = setTimeout(checkMediaLoaded, 200);
@@ -322,7 +322,7 @@ function sfSavedFindElement(code, retries = 30, interval = 100) {
       } else if (attemptsLeft > 0) {
         waiter.timer = setTimeout(() => tryFind(attemptsLeft - 1), interval);
       } else {
-        if (SF_SAVED_DEBUG) console.warn("[SortFeed][saved] findElement", code, "→ NOT FOUND after", Date.now() - startedAt, "ms (no anchor in DOM)");
+        if (SF_SAVED_DEBUG) console.warn("[FeedRank][saved] findElement", code, "→ NOT FOUND after", Date.now() - startedAt, "ms (no anchor in DOM)");
         sfSavedSettle(waiter, null);
       }
     };
@@ -352,7 +352,7 @@ function sfSavedSortItems(data, sortBy) {
 }
 
 function sfSavedReadTarget() {
-  const raw = sessionStorage.getItem("sortFeedNoItems") || "";
+  const raw = sessionStorage.getItem("feedRankNoItems") || "";
   // Saved allows "all_reels" (unlike Search) — saved collections are finite.
   // Defensive cap keeps memory bounded if a list is unexpectedly huge.
   if (raw === "all_reels") return 10000;
@@ -375,7 +375,7 @@ const SF_SAVED_SCAN_K = 60;            // knee of the work curve, in items
 const SF_SAVED_SCAN_LAST_PAGE_FLOOR = 0.9;
 
 function sfSavedScanProgress(count) {
-  if ((sessionStorage.getItem("sortFeedNoItems") || "") !== "all_reels") return null;
+  if ((sessionStorage.getItem("feedRankNoItems") || "") !== "all_reels") return null;
   let progress = count / (count + SF_SAVED_SCAN_K);
   if (sfSavedFeedExhausted) progress = Math.max(progress, SF_SAVED_SCAN_LAST_PAGE_FLOOR);
   return Math.max(0, Math.min(1, progress));
@@ -400,8 +400,8 @@ function sfSavedRemoveBannerAndOverlay() {
 }
 
 function sfSavedFinishSort() {
-  sessionStorage.removeItem("sortFeedStopSorting");
-  sessionStorage.removeItem("sortFeedStatus");
+  sessionStorage.removeItem("feedRankStopSorting");
+  sessionStorage.removeItem("feedRankStatus");
 }
 
 // Single exit point — the natural completion chain AND the Stop express route
@@ -428,12 +428,12 @@ function sfSavedFinalize(items) {
     return;
   }
 
-  const sortBy = sessionStorage.getItem("sortFeedSortBy");
+  const sortBy = sessionStorage.getItem("feedRankSortBy");
   const sorted = sfSavedSortItems(list, sortBy);
 
   if (SF_SAVED_DEBUG) {
     console.log(
-      "[SortFeed][saved] sort complete —",
+      "[FeedRank][saved] sort complete —",
       sorted.length, "items, sorted by", sortBy,
       ". Posting to renderer.",
     );
@@ -444,11 +444,11 @@ function sfSavedFinalize(items) {
   // blocks date filters entirely, so this is always an items-mode record.
   const sfCtx = {
     mode: "items",
-    selection: sessionStorage.getItem("sortFeedNoItems"),
+    selection: sessionStorage.getItem("feedRankNoItems"),
     sortBy: sortBy,
     tab: "Posts",
     surface: "saved",
-    savedSubMode: sessionStorage.getItem("sortFeedSavedSubMode"), // all_posts | collection
+    savedSubMode: sessionStorage.getItem("feedRankSavedSubMode"), // all_posts | collection
     path: location.pathname,
     search: location.search,
     collectedCount: list.length,
@@ -479,15 +479,15 @@ async function sfSavedProcessBatch(response, moreAvailable, target) {
   const flatItems = sfSavedFlattenItems(response);
   if (SF_SAVED_DEBUG) {
     console.log(
-      "[SortFeed][saved] processBatch START — flat items:", flatItems.length,
+      "[FeedRank][saved] processBatch START — flat items:", flatItems.length,
       "more_available:", moreAvailable, "target:", target,
       "running total before batch:", sfSavedMemory.items.length,
     );
   }
 
   for (let i = 0; i < flatItems.length; i++) {
-    if (!sessionStorage.getItem("sortFeedStatus")) {
-      if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] processBatch — sortFeedStatus cleared, bailing");
+    if (!sessionStorage.getItem("feedRankStatus")) {
+      if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] processBatch — feedRankStatus cleared, bailing");
       return sfSavedMemory.items;
     }
 
@@ -495,7 +495,7 @@ async function sfSavedProcessBatch(response, moreAvailable, target) {
     // express route already finalized; sfSavedStopNow is a no-op if so).
     if (sfSavedStopRequested()) { sfSavedStopNow(); return null; }
 
-    if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] processBatch — iter", i, "/", flatItems.length - 1, "code:", flatItems[i]?.code);
+    if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] processBatch — iter", i, "/", flatItems.length - 1, "code:", flatItems[i]?.code);
     const meta = sfSavedCreateMetadata(flatItems[i]);
     const element = await sfSavedFindElement(meta.code);
 
@@ -508,22 +508,22 @@ async function sfSavedProcessBatch(response, moreAvailable, target) {
 
     sfSavedNotifyCollected(items.length);
     sfSavedNotifyBanner(items.length);
-    if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] processBatch — after iter", i, "running total:", items.length);
+    if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] processBatch — after iter", i, "running total:", items.length);
 
-    if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-      if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] processBatch — user clicked Stop, finalizing");
+    if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+      if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] processBatch — user clicked Stop, finalizing");
       sfSavedFinishSort();
       return items;
     }
 
     if (items.length >= target) {
-      if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] processBatch — hit target", target, ", finalizing");
+      if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] processBatch — hit target", target, ", finalizing");
       sfSavedFinishSort();
       return items;
     }
 
     if (i === flatItems.length - 1 && !moreAvailable) {
-      if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] processBatch — end of batch, no more pages, finalizing with", items.length, "items");
+      if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] processBatch — end of batch, no more pages, finalizing with", items.length, "items");
       sfSavedFinishSort();
       return items;
     }
@@ -537,7 +537,7 @@ async function sfSavedProcessBatch(response, moreAvailable, target) {
 
   if (SF_SAVED_DEBUG) {
     console.log(
-      "[SortFeed][saved] processBatch END — batch consumed but more pages expected.",
+      "[FeedRank][saved] processBatch END — batch consumed but more pages expected.",
       "Running total:", sfSavedMemory.items.length, "/ target", target,
       ". Nudged scroll to last rendered anchor. WAITING for next response.",
     );
@@ -551,12 +551,12 @@ function sfSavedNudgeLoadMore() {
   const anchors = document.querySelectorAll('main a[href*="/p/"], main a[href*="/reel/"]');
   const last = anchors[anchors.length - 1];
   if (!last) {
-    if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] nudgeLoadMore — no anchors in <main> yet, skipping");
+    if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] nudgeLoadMore — no anchors in <main> yet, skipping");
     return;
   }
   const parentDiv = last.closest("div") || last;
   parentDiv.scrollIntoView({ behavior: "auto", block: "end" });
-  if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] nudgeLoadMore — scrolled to last anchor:", last.getAttribute("href"));
+  if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] nudgeLoadMore — scrolled to last anchor:", last.getAttribute("href"));
 }
 
 // Shared handler — same parse + dispatch logic used by both XHR and fetch
@@ -564,8 +564,8 @@ function sfSavedNudgeLoadMore() {
 // out via window.postMessage when the sort finalizes.
 function sfSavedHandleResponse(responseText, urlForLog, source) {
   if (sfSavedDone) return; // already finalized (natural finish or Stop)
-  if (sessionStorage.getItem("sortFeedSurface") !== "saved") return;
-  if (!sessionStorage.getItem("sortFeedStatus")) return;
+  if (sessionStorage.getItem("feedRankSurface") !== "saved") return;
+  if (!sessionStorage.getItem("feedRankStatus")) return;
 
   // GraphQL: only the collection page query is ours (stories tray, timeline,
   // badges… all share the endpoint). Cheap substring test before any parse.
@@ -576,7 +576,7 @@ function sfSavedHandleResponse(responseText, urlForLog, source) {
   try {
     jsonResponse = JSON.parse(responseText);
   } catch (e) {
-    if (SF_SAVED_DEBUG) console.warn("[SortFeed][saved]", source, "— JSON.parse failed:", e);
+    if (SF_SAVED_DEBUG) console.warn("[FeedRank][saved]", source, "— JSON.parse failed:", e);
     return;
   }
   if (isGraphql) {
@@ -588,7 +588,7 @@ function sfSavedHandleResponse(responseText, urlForLog, source) {
   if (!Array.isArray(jsonResponse?.items)) {
     if (SF_SAVED_DEBUG) {
       const keys = jsonResponse ? Object.keys(jsonResponse).slice(0, 10) : [];
-      console.log("[SortFeed][saved]", source, "— response has no items array. top-level keys:", keys);
+      console.log("[FeedRank][saved]", source, "— response has no items array. top-level keys:", keys);
     }
     return;
   }
@@ -599,7 +599,7 @@ function sfSavedHandleResponse(responseText, urlForLog, source) {
 
   if (SF_SAVED_DEBUG) {
     console.log(
-      "[SortFeed][saved]", source, "— /api/v1/feed/saved/posts/ response received.",
+      "[FeedRank][saved]", source, "— /api/v1/feed/saved/posts/ response received.",
       "num_results:", jsonResponse.num_results,
       "more_available:", moreAvailable,
       "target:", target,
@@ -610,7 +610,7 @@ function sfSavedHandleResponse(responseText, urlForLog, source) {
     if (!items) return; // batch consumed, waiting for next response
     sfSavedFinalize(items);
   }).catch((e) => {
-    if (SF_SAVED_DEBUG) console.error("[SortFeed][saved] processBatch threw:", e);
+    if (SF_SAVED_DEBUG) console.error("[FeedRank][saved] processBatch threw:", e);
   });
 }
 
@@ -627,12 +627,12 @@ function sfSavedHandleResponse(responseText, urlForLog, source) {
 
   XMLHttpRequest.prototype.send = function (body) {
     this.addEventListener("load", function () {
-      if (sessionStorage.getItem("sortFeedSurface") !== "saved") return;
-      if (!sessionStorage.getItem("sortFeedStatus")) return;
+      if (sessionStorage.getItem("feedRankSurface") !== "saved") return;
+      if (!sessionStorage.getItem("feedRankStatus")) return;
       if (!sfSavedIsSavedUrl(this._sfSavedUrl)) return;
       if (this.responseType !== "" && this.responseType !== "text") return;
 
-      if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] XHR load — saved/collection endpoint response received:", this._sfSavedUrl);
+      if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] XHR load — saved/collection endpoint response received:", this._sfSavedUrl);
       sfSavedHandleResponse(this.responseText, this._sfSavedUrl, "XHR");
     });
     return originalSend.apply(this, arguments);
@@ -653,16 +653,16 @@ function sfSavedHandleResponse(responseText, urlForLog, source) {
     if (!sfSavedIsSavedUrl(url)) return fetchPromise;
 
     fetchPromise.then((response) => {
-      if (sessionStorage.getItem("sortFeedSurface") !== "saved") return;
-      if (!sessionStorage.getItem("sortFeedStatus")) return;
+      if (sessionStorage.getItem("feedRankSurface") !== "saved") return;
+      if (!sessionStorage.getItem("feedRankStatus")) return;
       try {
         const clone = response.clone();
         clone.text().then((text) => {
-          if (SF_SAVED_DEBUG) console.log("[SortFeed][saved] fetch resolved — saved/collection endpoint response received:", url);
+          if (SF_SAVED_DEBUG) console.log("[FeedRank][saved] fetch resolved — saved/collection endpoint response received:", url);
           sfSavedHandleResponse(text, url, "fetch");
         }).catch(() => {});
       } catch (e) {
-        if (SF_SAVED_DEBUG) console.warn("[SortFeed][saved] fetch — clone/text failed:", e);
+        if (SF_SAVED_DEBUG) console.warn("[FeedRank][saved] fetch — clone/text failed:", e);
       }
     }).catch(() => {});
 

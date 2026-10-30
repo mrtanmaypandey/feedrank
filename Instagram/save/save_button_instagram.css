@@ -95,7 +95,7 @@ html.sf-save-off .sf-save-row { display: none !important; }
   100% { opacity: 1; transform: scale(1); }
 }
 
-/* Sparkle burst — AdScoop's, in Sort Feed's yellows */
+/* Sparkle burst in FeedRank yellow */
 .sf-save-spark {
   position: absolute;
   left: 50%;

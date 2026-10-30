@@ -1059,17 +1059,8 @@ body.sf-locked .sf-dd-divider:has(+ .sf-dd-opt-custom) {
   min-width: 0;
 }
 
-.sf-dd-get-pro-icon {
-  display: block;
-  width: 12px;
-  height: 12px;
-  margin-right: 7px;
-  flex-shrink: 0;
-  /* getPro.svg ships blue (#0081F0); mask + fill paints it black-at-0.35 — the
-     exact treatment of the locked Custom pencil, so the two icons match. */
-  background-color: rgba(0, 0, 0, 0.35);
-  -webkit-mask: url("../Icons/getPro.svg") no-repeat center / contain;
-  mask: url("../Icons/getPro.svg") no-repeat center / contain;
+.sf-dd-get-pro {
+  display: none !important;
 }
 
 .sf-dd-get-pro-label {
@@ -2162,8 +2153,8 @@ body.sf-date-panel-open.sf-feature-banner-open .chrome {
   margin-top: 1px;
 }
 
-/* ── Feature banner, "note" variant (Sort Feed MCP announcement) ──
-   A Notion callout in the Sort Feed palette: a flat wash of the brand yellow
+/* ── Feature banner, "note" variant (FeedRank announcement) ──
+   A Notion callout in the FeedRank palette: a flat wash of the brand yellow
    (#FFDC80 at ~16%) with no border or shadow, and one line: "New:" a step darker
    than the sentence it leads. The block itself is the link. */
 .footer_div_again_sub_feature.sf-banner--note {
@@ -2965,7 +2956,7 @@ body.sf-gear-on .sf-gear-btn {
   left: 0;
   display: flex;
   align-items: center;
-  /* 13 + 22 (button) + 5 (title gap) = 40px — the exact x where "Sort Feed"
+  /* 13 + 22 (button) + 5 (title gap) = 40px — the exact x where "FeedRank"
      starts (15 logo padding + 19 logo + 6 heading padding), so the two titles
      land on the same baseline column during the crossfade. */
   padding-left: 13px;
@@ -3013,7 +3004,7 @@ body.sf-gear-on .sf-gear-btn {
           mask: url("../Icons/popupIcons/rightIcon.svg") no-repeat center / contain;
 }
 
-/* Matches the "Sort Feed" wordmark exactly — only the leading gap differs,
+/* Matches the "FeedRank" wordmark exactly — only the leading gap differs,
    since it trails a 22px icon button rather than the logo. */
 .sf-settings-title {
   padding-left: 5px;
@@ -3106,7 +3097,7 @@ body.sf-settings-open .sf-gear-btn {
   }
 }
 
-/* ─── Sort Feed MCP row (Instagram Settings › Claude) ───
+/* ─── FeedRank MCP row (Instagram Settings › Claude) ───
    Status line + one button, styled like .sf-dd-trigger. */
 /* Last section of the panel since 2026-10-22 (Display sits above it): the 14px gap
    between sections lives on this section's top, so nothing trails under its card. */

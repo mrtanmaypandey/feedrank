@@ -159,11 +159,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 Posts</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="50_reels"><span>Latest 50 Posts</span></div>
+                          <div class="sf-dd-opt" data-value="100_reels"><span>Latest 100 Posts</span></div>
+                          <div class="sf-dd-opt" data-value="200_reels"><span>Latest 200 Posts</span></div>
+                          <div class="sf-dd-opt" data-value="1000_reels"><span>Latest 1K Posts</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All Posts</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -172,20 +172,7 @@
                             </span>
                             <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
                           </div>
-                          <!-- Free/signed-out only — wrapper shown by sf_dd_lock(), hidden by
-                               unlock_all_options(). Divider + inset button so the row's hover
-                               matches the option rows exactly. -->
-                          <div class="sf-dd-get-pro" style="display:none;">
-                            <div class="sf-dd-divider"></div>
-                            <button type="button" class="sf-dd-get-pro-btn" data-sf-upgrade="dropdown_row">
-                              <span class="sf-dd-get-pro-left">
-                                <span class="sf-dd-get-pro-icon" aria-hidden="true"></span>
-                                <span class="sf-dd-get-pro-label">Get Pro</span>
-                              </span>
-                              <span class="sf-dd-get-pro-arrow" aria-hidden="true"></span>
-                            </button>
                           </div>
-                        </div>
                         <div class="sf-dd-custom-panel" aria-hidden="true">
                           <div class="sf-dd-custom-title">Set custom number of posts</div>
                           <input type="number" min="1" max="10000" step="1" inputmode="numeric"
@@ -208,11 +195,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="1_week">Posts from 1 Week Back</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>Posts from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>Posts from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>Posts from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>Posts from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="1_month"><span>Posts from 1 Month Back</span></div>
+                          <div class="sf-dd-opt" data-value="3_month"><span>Posts from 3 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="6_month"><span>Posts from 6 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="1_year"><span>Posts from 1 Year Back</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All Posts</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -221,20 +208,7 @@
                             </span>
                             <img src="Icons/ButtonIcons/DownGrey.svg" class="sf-dd-opt-chev" alt="" />
                           </div>
-                          <!-- Free/signed-out only — wrapper shown by sf_dd_lock(), hidden by
-                               unlock_all_options(). Divider + inset button so the row's hover
-                               matches the option rows exactly. -->
-                          <div class="sf-dd-get-pro" style="display:none;">
-                            <div class="sf-dd-divider"></div>
-                            <button type="button" class="sf-dd-get-pro-btn" data-sf-upgrade="dropdown_row">
-                              <span class="sf-dd-get-pro-left">
-                                <span class="sf-dd-get-pro-icon" aria-hidden="true"></span>
-                                <span class="sf-dd-get-pro-label">Get Pro</span>
-                              </span>
-                              <span class="sf-dd-get-pro-arrow" aria-hidden="true"></span>
-                            </button>
                           </div>
-                        </div>
                         <div class="sf-dd-custom-panel sf-dd-custom-panel-date" aria-hidden="true">
                           <div class="sf-dd-custom-title">
                             Set date range
@@ -304,7 +278,7 @@
 
                   <button id="sortOldestClicks" class="SortButtonMain">
                     <div style="display: flex; width: 100%; align-items: center;">
-                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <img src="Icons/ButtonIcons/oldest.svg" style="width: 11px; margin-right: 10px;" />
                       <span>Oldest</span>
                     </div>
                   </button>
@@ -419,11 +393,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 TikToks</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="50_reels"><span>Latest 50 TikToks</span></div>
+                          <div class="sf-dd-opt" data-value="100_reels"><span>Latest 100 TikToks</span></div>
+                          <div class="sf-dd-opt" data-value="200_reels"><span>Latest 200 TikToks</span></div>
+                          <div class="sf-dd-opt" data-value="1000_reels"><span>Latest 1K TikToks</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All TikToks</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -455,11 +429,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="1_week">TikToks from 1 Week Back</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>TikToks from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>TikToks from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>TikToks from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>TikToks from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All TikToks</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="1_month"><span>TikToks from 1 Month Back</span></div>
+                          <div class="sf-dd-opt" data-value="3_month"><span>TikToks from 3 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="6_month"><span>TikToks from 6 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="1_year"><span>TikToks from 1 Year Back</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All TikToks</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -553,7 +527,7 @@
 
                   <button id="sortOldestClicksTikTok" class="SortButtonMain">
                     <div style="display: flex; width: 100%; align-items: center;">
-                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <img src="Icons/ButtonIcons/oldest.svg" style="width: 11px; margin-right: 10px;" />
                       <span>Oldest</span>
                     </div>
                   </button>
@@ -659,11 +633,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 Posts</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="50_reels"><span>Latest 50 Posts</span></div>
+                          <div class="sf-dd-opt" data-value="100_reels"><span>Latest 100 Posts</span></div>
+                          <div class="sf-dd-opt" data-value="200_reels"><span>Latest 200 Posts</span></div>
+                          <div class="sf-dd-opt" data-value="1000_reels"><span>Latest 1K Posts</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All Posts</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -695,11 +669,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="1_week">Posts from 1 Week Back</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>Posts from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>Posts from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>Posts from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>Posts from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Posts</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="1_month"><span>Posts from 1 Month Back</span></div>
+                          <div class="sf-dd-opt" data-value="3_month"><span>Posts from 3 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="6_month"><span>Posts from 6 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="1_year"><span>Posts from 1 Year Back</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All Posts</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -784,7 +758,7 @@
 
                   <button id="sortOldestClicksFacebook" class="SortButtonMain">
                     <div style="display: flex; width: 100%; align-items: center;">
-                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <img src="Icons/ButtonIcons/oldest.svg" style="width: 11px; margin-right: 10px;" />
                       <span>Oldest</span>
                     </div>
                   </button>
@@ -889,11 +863,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="25_reels">Latest 25 Videos</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="50_reels"><span>Latest 50 Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="100_reels"><span>Latest 100 Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="200_reels"><span>Latest 200 Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1000_reels"><span>Latest 1K Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="50_reels"><span>Latest 50 Videos</span></div>
+                          <div class="sf-dd-opt" data-value="100_reels"><span>Latest 100 Videos</span></div>
+                          <div class="sf-dd-opt" data-value="200_reels"><span>Latest 200 Videos</span></div>
+                          <div class="sf-dd-opt" data-value="1000_reels"><span>Latest 1K Videos</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All Videos</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -925,11 +899,11 @@
                       <div class="sf-dd-menu" aria-hidden="true">
                         <div class="sf-dd-options-list">
                           <div class="sf-dd-opt sf-dd-selected" data-value="1_week">Videos from 1 Week Back</div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_month"><span>Videos from 1 Month Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="3_month"><span>Videos from 3 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="6_month"><span>Videos from 6 Months Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="1_year"><span>Videos from 1 Year Back</span><span class="sf-dd-pro-pill">Pro</span></div>
-                          <div class="sf-dd-opt sf-dd-locked" data-value="all_reels"><span>All Videos</span><span class="sf-dd-pro-pill">Pro</span></div>
+                          <div class="sf-dd-opt" data-value="1_month"><span>Videos from 1 Month Back</span></div>
+                          <div class="sf-dd-opt" data-value="3_month"><span>Videos from 3 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="6_month"><span>Videos from 6 Months Back</span></div>
+                          <div class="sf-dd-opt" data-value="1_year"><span>Videos from 1 Year Back</span></div>
+                          <div class="sf-dd-opt" data-value="all_reels"><span>All Videos</span></div>
                           <div class="sf-dd-divider"></div>
                           <div class="sf-dd-opt sf-dd-opt-custom" data-value="__custom__">
                             <span class="sf-dd-opt-custom-left">
@@ -999,7 +973,7 @@
 
                   <button id="sortOldestClicksYoutube" class="SortButtonMain">
                     <div style="display: flex; width: 100%; align-items: center;">
-                      <img src="Icons/ButtonIcons/SortFeedOld.svg" style="width: 11px; margin-right: 10px;" />
+                      <img src="Icons/ButtonIcons/oldest.svg" style="width: 11px; margin-right: 10px;" />
                       <span>Oldest</span>
                     </div>
                   </button>
@@ -1019,10 +993,7 @@
 
       <!-- FEEDRANK FOOTER -->
       <!-- Hidden legacy placeholders to prevent JS errors -->
-      <div id="subFooter" style="display: none !important;"></div>
-      <div id="FreeFooter" style="display: none !important;"></div>
-      <div id="PaidFooter" style="display: none !important;"></div>
-      <div id="footerMenu" class="sf-menu sf-hidden" role="menu" aria-hidden="true" style="display: none !important;"></div>
+                        <div id="footerMenu" class="sf-menu sf-hidden" role="menu" aria-hidden="true" style="display: none !important;"></div>
 
       <!-- New clean developer support footer -->
       <div id="feedrankFooter" style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; align-self: stretch; padding: 12px 15px; border-top: 1px solid rgba(128,128,128,0.15); background: rgba(0,0,0,0.02);">

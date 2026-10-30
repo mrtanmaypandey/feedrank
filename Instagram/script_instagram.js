@@ -75,7 +75,7 @@ function reset_in_memory_feed_data() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Stop Sorting — immediate abort
 //
-// The banner's Stop button raises `sortFeedStopSorting` AND posts
+// The banner's Stop button raises `feedRankStopSorting` AND posts
 // `sf_stop_sorting` (see _sfRequestStopInsta in banner_on_insta.js). The flag on
 // its own can only be POLLED, and every collect loop polls it *after*
 // `await find_element_*` — a wait that spends up to ~3s hunting the anchor and
@@ -102,7 +102,7 @@ const _sfStop = {
 function _sfStopRequested() {
   if (_sfStop.requested) return true;
   try {
-    return sessionStorage.getItem("sortFeedStopSorting") === "on";
+    return sessionStorage.getItem("feedRankStopSorting") === "on";
   } catch (e) {
     return false;
   }
@@ -159,7 +159,7 @@ window.addEventListener("message", (event) => {
   // Profile surface only. Explore and Saved run in their own page-world scripts
   // with their own memory, and all three receive this same broadcast — the
   // surface flag (unset on Profile) decides which one owns the abort.
-  if (sessionStorage.getItem("sortFeedSurface")) return;
+  if (sessionStorage.getItem("feedRankSurface")) return;
   _sfStopNow();
 });
 
@@ -168,7 +168,7 @@ window.addEventListener("message", (event) => {
 //
 // A second popup sort used to be rejected outright ("Back-to-back sorting isn't
 // supported yet") because nothing on the page remembered what had just been
-// sorted: remove_items_local_storage() wipes sortFeedSortBy / NoItems /
+// sorted: remove_items_local_storage() wipes feedRankSortBy / NoItems /
 // ItemsVsDates the moment the banner mounts.
 //
 // These two globals describe the scrape, so the content script can decide whether
@@ -235,10 +235,10 @@ function _sfNoteResponseDepth(jsonResponse) {
 function _sfBuildSortContext(collectedCount, sfOutlierMeta) {
   return {
     mode: sessionStorage.getItem("sortItemsVsDates"),      // "items" | "dates"
-    selection: sessionStorage.getItem("sortFeedNoItems"),  // "100_reels" | "3_month" | "custom_…"
-    sortBy: sessionStorage.getItem("sortFeedSortBy"),
-    tab: sessionStorage.getItem("sortFeedPostsVSReels"),   // "Reels" | "Posts"
-    surface: sessionStorage.getItem("sortFeedSurface") || "profile",
+    selection: sessionStorage.getItem("feedRankNoItems"),  // "100_reels" | "3_month" | "custom_…"
+    sortBy: sessionStorage.getItem("feedRankSortBy"),
+    tab: sessionStorage.getItem("feedRankPostsVSReels"),   // "Reels" | "Posts"
+    surface: sessionStorage.getItem("feedRankSurface") || "profile",
     path: location.pathname,
     collectedCount: collectedCount,
     deepestSeenMs: _sfDeepestSeenMs,
@@ -271,18 +271,18 @@ function _sfRenderSorted(items, sfOutlierMeta) {
   // Captured for the same reason: the opportunistic-baseline work below would
   // otherwise read these after they're gone.
   // Note _sfOutlierScorableSurface, NOT _sfOutlierRecordOn — the collect loop has
-  // already cleared sortFeedStatus by now, so the in-flight test would be false.
+  // already cleared feedRankStatus by now, so the in-flight test would be false.
   const scoreable = _sfOutlierScorableSurface();
   const stoppedShort = _sfStopRequested();
 
-  sessionStorage.removeItem("sortFeedStopSorting");
-  sessionStorage.removeItem("sortFeedStatus");
+  sessionStorage.removeItem("feedRankStopSorting");
+  sessionStorage.removeItem("feedRankStatus");
   profileNameIG = null;
 
   // Stopped before a single item finished capturing — there is nothing to
   // render, so leave IG's own feed alone and just clear our chrome.
   if (!list.length) {
-    removeSortFeedBannerMessage();
+    removeFeedRankBannerMessage();
     remove_overlay();
     return;
   }
@@ -313,10 +313,10 @@ function _sfRenderSorted(items, sfOutlierMeta) {
   // breakout" would be baffling on a plain likes sort the user never asked to score.
   _sfOutlierNotifyOutcome(list, sfOutlierMeta);
 
-  const sort_by = sessionStorage.getItem("sortFeedSortBy");
+  const sort_by = sessionStorage.getItem("feedRankSortBy");
   const sorted_items = sort_items(list, sort_by);
 
-  removeSortFeedBannerMessage(); // banner_on_insta.js: removes overlay + loading banner
+  removeFeedRankBannerMessage(); // banner_on_insta.js: removes overlay + loading banner
   remove_overlay();              // removes the overlay again
 
   window.postMessage(
@@ -337,8 +337,8 @@ function _sfFinalizeEmptyRange(type) {
   const sfCtx = _sfBuildSortContext(0, null);
   sfCtx.empty = true;
 
-  sessionStorage.removeItem("sortFeedStopSorting");
-  sessionStorage.removeItem("sortFeedStatus");
+  sessionStorage.removeItem("feedRankStopSorting");
+  sessionStorage.removeItem("feedRankStatus");
   profileNameIG = null;
 
   window.postMessage({ insta_date_range_empty: true, type: type, sf_ctx: sfCtx }, "*");
@@ -357,7 +357,7 @@ function _sfRememberProfilePk(user) {
     if (!pk) return;
     const profile = (window.location.pathname.split("/")[1] || "").toLowerCase();
     if (!profile) return;
-    const prev = sessionStorage.getItem("sortFeedProfilePkIG") || "";
+    const prev = sessionStorage.getItem("feedRankProfilePkIG") || "";
     if (prev.startsWith(profile + ":")) return;
 
     const owner = String(user?.username || "").toLowerCase();
@@ -368,7 +368,7 @@ function _sfRememberProfilePk(user) {
       _sfProfilePkVotes[key] = (_sfProfilePkVotes[key] || 0) + 1;
       if (_sfProfilePkVotes[key] < 2) return;
     }
-    sessionStorage.setItem("sortFeedProfilePkIG", profile + ":" + String(pk));
+    sessionStorage.setItem("feedRankProfilePkIG", profile + ":" + String(pk));
   } catch (e) {}
 }
 
@@ -436,7 +436,7 @@ function createMetadataJson(jsonResponse) {
 
 function getUserNameReels() {
   // 1️⃣ Check cache
-  // const cached = sessionStorage.getItem("sortFeedProfileName");
+  // const cached = sessionStorage.getItem("feedRankProfileName");
   // if (cached) return cached;
 
   // 2️⃣ Try to read from DOM immediately
@@ -448,7 +448,7 @@ function getUserNameReels() {
   if (usernameElement) {
     const username = usernameElement.innerText.trim(); 
     profileNameIG=username;
-    // sessionStorage.setItem("sortFeedProfileName", username);
+    // sessionStorage.setItem("feedRankProfileName", username);
     return profileNameIG;
   }
   }
@@ -538,7 +538,7 @@ function scroll_to_view(lastElement) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Outlier score — baseline pool (Profile → Reels AND Posts, gated by the
-// `sortFeedOutlier` sessionStorage flag set in init_sortfeed_instagram.js).
+// `feedRankOutlier` sessionStorage flag set in init_feedrank_instagram.js).
 //
 // score = item metric ÷ baseline. The metric depends on the tab:
 //   Reels → VIEWS   ·   Posts → LIKES   (a reel inside the Posts grid is
@@ -618,26 +618,26 @@ const _sfOutlierPool = {
 // likes. Read from the tab flag so it's consistent everywhere (record, median,
 // stamp, sort fallback).
 function _sfOutlierMetric() {
-  return sessionStorage.getItem("sortFeedPostsVSReels") === "Posts" ? "likes" : "views";
+  return sessionStorage.getItem("feedRankPostsVSReels") === "Posts" ? "likes" : "views";
 }
 
 // A scoring SESSION is on — the user explicitly asked for an outlier sort. Gates
 // pool mode, the "analyzing" banner and the outcome toasts.
 function _sfOutlierSessionOn() {
-  return sessionStorage.getItem("sortFeedOutlier") === "on" && _sfOutlierRecordOn();
+  return sessionStorage.getItem("feedRankOutlier") === "on" && _sfOutlierRecordOn();
 }
 
 // Can this surface be scored at all? Profile Posts/Reels — no time element.
 //
-// ⚠️ Deliberately does NOT test `sortFeedStatus`. Every collect loop clears that
+// ⚠️ Deliberately does NOT test `feedRankStatus`. Every collect loop clears that
 // flag just BEFORE it resolves, so by the time the render runs the sort no longer
 // looks "in flight". Gating the render-time baseline work on it meant tiers 1 and
 // 2 never ran on an ordinary sort — sorting by likes and then picking Outlier
 // always refreshed, while outlier-then-likes worked fine (that path carries its
 // own meta and never consults this).
 function _sfOutlierScorableSurface() {
-  const pv = sessionStorage.getItem("sortFeedPostsVSReels");
-  return (pv === "Reels" || pv === "Posts") && !sessionStorage.getItem("sortFeedSurface");
+  const pv = sessionStorage.getItem("feedRankPostsVSReels");
+  return (pv === "Reels" || pv === "Posts") && !sessionStorage.getItem("feedRankSurface");
 }
 
 // Whether to RECORD a response into the pool — a scorable surface with a sort
@@ -651,7 +651,7 @@ function _sfOutlierScorableSurface() {
 function _sfOutlierRecordOn() {
   return (
     _sfOutlierScorableSurface() &&
-    (sessionStorage.getItem("sortFeedStatus") !== null || _sfOutlierPool.active)
+    (sessionStorage.getItem("feedRankStatus") !== null || _sfOutlierPool.active)
   );
 }
 
@@ -823,7 +823,7 @@ function _sfOutlierCancel() {
   P.resolveFn = null;
   if (resolveFn) resolveFn(cancelled);
 
-  return sessionStorage.getItem("sortFeedOutlier") === "on" ? cancelled : null;
+  return sessionStorage.getItem("feedRankOutlier") === "on" ? cancelled : null;
 }
 
 // Pool mode's per-page tick — called from the recorder for every clips page
@@ -840,8 +840,8 @@ function _sfOutlierPoolPageArrived() {
   );
 
   // Stop button pressed during pool mode → render without badges.
-  if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-    sessionStorage.removeItem("sortFeedStopSorting");
+  if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+    sessionStorage.removeItem("feedRankStopSorting");
     _sfOutlierFinish({ status: "cancelled", baseline: null, poolSize: 0 });
     return;
   }
@@ -877,8 +877,8 @@ function _sfOutlierRequestNextPage() {
   clearTimeout(P.waitTimer);
   P.waitTimer = setTimeout(() => {
     if (!P.active) return;
-    if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-      sessionStorage.removeItem("sortFeedStopSorting");
+    if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+      sessionStorage.removeItem("feedRankStopSorting");
       _sfOutlierFinish({ status: "cancelled", baseline: null, poolSize: 0 });
       return;
     }
@@ -901,7 +901,7 @@ function _sfOutlierRequestNextPage() {
 function _sfOutlierEnsurePool() {
   return new Promise((resolve) => {
     try {
-      if (sessionStorage.getItem("sortFeedOutlier") !== "on") { resolve(null); return; }
+      if (sessionStorage.getItem("feedRankOutlier") !== "on") { resolve(null); return; }
       const P = _sfOutlierPool;
       if (P.stoppedByUser || _sfStopRequested()) {
         resolve({ status: "cancelled", baseline: null, poolSize: 0 });
@@ -935,7 +935,7 @@ function _sfOutlierEnsurePool() {
 const SF_OUTLIER_BADGE_MIN = 2;
 
 // After an outlier sort resolves, post the user-facing note (if any) the banner
-// should show on removal, BEFORE removeSortFeedBannerMessage so it swaps the
+// should show on removal, BEFORE removeFeedRankBannerMessage so it swaps the
 // banner instead of fading. Two OUTCOMES, deliberately worded apart because they
 // are not the same claim:
 //   • NO BASELINE (case B) → we never had a yardstick, so we can say nothing
@@ -956,7 +956,7 @@ function _sfOutlierNotifyOutcome(items, meta) {
   const metric = meta.metric || _sfOutlierMetric();
   if (
     (meta.status === "insufficient" || meta.status === "error") &&
-    sessionStorage.getItem("sortFeedSortBy") === "outlier"
+    sessionStorage.getItem("feedRankSortBy") === "outlier"
   ) {
     window.postMessage({ sf_outlier_insufficient: true, metric: metric }, "*");
     return;
@@ -984,22 +984,22 @@ function _sfOutlierStampScores(items, meta) {
 
 // Save feed data locally, init and append
 function save_data_locally(singleNodeJSON) {
-  if (sessionStorage.getItem("sortFeedData") !== null) {
-    let itemsCleaned = JSON.parse(sessionStorage.getItem("sortFeedData"));
+  if (sessionStorage.getItem("feedRankData") !== null) {
+    let itemsCleaned = JSON.parse(sessionStorage.getItem("feedRankData"));
     itemsCleaned.push(singleNodeJSON);
-    sessionStorage.setItem("sortFeedData", JSON.stringify(itemsCleaned));
+    sessionStorage.setItem("feedRankData", JSON.stringify(itemsCleaned));
     return itemsCleaned;
   } else {
     let itemsCleaned = [];
     itemsCleaned.push(singleNodeJSON);
-    sessionStorage.setItem("sortFeedData", JSON.stringify(itemsCleaned));
+    sessionStorage.setItem("feedRankData", JSON.stringify(itemsCleaned));
     return itemsCleaned;
   }
 }
 
 // Return no of items selected, 0 if all items were selected
 function return_number_selected() {
-  let sort_selected = sessionStorage.getItem("sortFeedNoItems");
+  let sort_selected = sessionStorage.getItem("feedRankNoItems");
 
   if (sort_selected === "all_reels") {
     return 0;
@@ -1212,7 +1212,7 @@ function sort_items(data, sortBy) {
     // metric order IS the outlier order — the fallback (views on Reels, likes
     // on Posts) keeps the sort correct when scoring came back insufficient and
     // no scores were stamped.
-    const fb = sessionStorage.getItem("sortFeedPostsVSReels") === "Posts" ? "likesCount" : "viewCount";
+    const fb = sessionStorage.getItem("feedRankPostsVSReels") === "Posts" ? "likesCount" : "viewCount";
     return [...data].sort(
       (a, b) => ((b.outlierScore ?? b[fb]) || 0) - ((a.outlierScore ?? a[fb]) || 0),
     );
@@ -1289,7 +1289,7 @@ function _sfScanWorkProgress() {
 // 0..1, or null when this sort has a real item target and doesn't need it.
 function _sfScanProgress() {
   const mode = sessionStorage.getItem("sortItemsVsDates");
-  const selection = sessionStorage.getItem("sortFeedNoItems") || "";
+  const selection = sessionStorage.getItem("feedRankNoItems") || "";
   const openEnded = selection === "all_reels";
 
   // Item sorts drive the bar off count ÷ target — except "All", which has no
@@ -1350,7 +1350,7 @@ function insta_banner_notification(itemsCleaned, postType) {
 }
 
 // sends message to banner_on_insta to remove both (overlay & loading banner)
-function removeSortFeedBannerMessage() {
+function removeFeedRankBannerMessage() {
   window.postMessage({ insta_banner_notification_remove: true }, "*");
 }
 
@@ -1378,18 +1378,18 @@ async function sort_item_posts(
       let singleNodeJSONUpdated = update_data_object_with_element(singleNodeJSON,element);
       let itemsCleaned = save_data_locally_again(singleNodeJSONUpdated);
 
-      if (sessionStorage.getItem("sortFeedStatus")) { 
+      if (sessionStorage.getItem("feedRankStatus")) { 
       send_items_collected_no(itemsCleaned);
       insta_banner_notification(itemsCleaned, "Posts");
       // check that Stop Socrting wasn't clicks
-      let sort_feed_sorting = sessionStorage.getItem("sortFeedStopSorting");
+      let feedrank_sorting = sessionStorage.getItem("feedRankStopSorting");
 
       // ✅ Case 00 -- user clicked stop sorting
-      if (sort_feed_sorting === "on") {
+      if (feedrank_sorting === "on") {
         _sfOutlierPool.stoppedByUser = true; // aborted sort → skip outlier scoring
 
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatus");
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatus");
         profileNameIG=null;
         resolve(itemsCleaned);
         return;
@@ -1400,10 +1400,10 @@ async function sort_item_posts(
         if (itemsCleaned.length === sort_selected) {
 
           // reset params & remove overlay/banner
-          sessionStorage.removeItem("sortFeedStopSorting");
-          sessionStorage.removeItem("sortFeedStatus");
+          sessionStorage.removeItem("feedRankStopSorting");
+          sessionStorage.removeItem("feedRankStatus");
           profileNameIG=null; 
-          // removeSortFeedBannerMessage();
+          // removeFeedRankBannerMessage();
           // resolve 
           resolve(itemsCleaned);
           return;
@@ -1413,10 +1413,10 @@ async function sort_item_posts(
         else if (i === numberItems - 1 && !nextPage) {
 
           // reset params & remove overlay/banner
-          sessionStorage.removeItem("sortFeedStopSorting");
-          sessionStorage.removeItem("sortFeedStatus");
+          sessionStorage.removeItem("feedRankStopSorting");
+          sessionStorage.removeItem("feedRankStatus");
           profileNameIG=null; 
-          // removeSortFeedBannerMessage();
+          // removeFeedRankBannerMessage();
           // resolve 
           resolve(itemsCleaned);
           return;
@@ -1468,21 +1468,21 @@ async function sort_not_all_reels(
         );
         let itemsCleaned = save_data_locally_again(singleNodeJSONUpdated);
 
-      if (sessionStorage.getItem("sortFeedStatus")) {
+      if (sessionStorage.getItem("feedRankStatus")) {
         send_items_collected_no(itemsCleaned);
         // add loading banner with updated reels number 
         insta_banner_notification(itemsCleaned, "Reels");
-        let sort_feed_sorting = sessionStorage.getItem("sortFeedStopSorting");
+        let feedrank_sorting = sessionStorage.getItem("feedRankStopSorting");
 
         // ✅ Case 00 -- user clicked stop sorting
-        if (sort_feed_sorting === "on") {
+        if (feedrank_sorting === "on") {
           _sfOutlierPool.stoppedByUser = true; // aborted sort → skip outlier scoring
 
             // reset params & remove overlay/banner
-          sessionStorage.removeItem("sortFeedStopSorting");
-          sessionStorage.removeItem("sortFeedStatus");
+          sessionStorage.removeItem("feedRankStopSorting");
+          sessionStorage.removeItem("feedRankStatus");
           profileNameIG=null;
-          // removeSortFeedBannerMessage();
+          // removeFeedRankBannerMessage();
           // resolve
 
           resolve(itemsCleaned);
@@ -1494,10 +1494,10 @@ async function sort_not_all_reels(
           if (itemsCleaned.length === sort_selected) {
   
             // reset params & remove overlay/banner
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatus");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatus");
             profileNameIG=null; 
-            // removeSortFeedBannerMessage();
+            // removeFeedRankBannerMessage();
             // resolve 
 
             resolve(itemsCleaned);
@@ -1512,10 +1512,10 @@ async function sort_not_all_reels(
 
 
             // reset params & remove overlay/banner
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatus");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatus");
             profileNameIG=null; 
-            // removeSortFeedBannerMessage();
+            // removeFeedRankBannerMessage();
             // resolve 
 
             resolve(itemsCleaned);
@@ -1619,11 +1619,11 @@ async function sort_date_posts(
         _sfNoteScanCursor(createDate);
       }
 
-      if (sessionStorage.getItem("sortFeedStatus")) {
-      let sort_feed_sorting = sessionStorage.getItem("sortFeedStopSorting");
+      if (sessionStorage.getItem("feedRankStatus")) {
+      let feedrank_sorting = sessionStorage.getItem("feedRankStopSorting");
 
         // ✅ Case 00 -- user clicked stop sorting
-        if (sort_feed_sorting === "on") {
+        if (feedrank_sorting === "on") {
           _sfOutlierPool.stoppedByUser = true; // aborted sort → skip outlier scoring
           // Only save the in-progress post if it's actually in range. For deep
           // past ranges where the loop is skipping newer-than-end posts, the
@@ -1638,9 +1638,9 @@ async function sort_date_posts(
           } catch (e) {
             itemsCleaned = inMemoryFeedData.items;
           }
-          removeSortFeedBannerMessage();
-          sessionStorage.removeItem("sortFeedStopSorting");
-          sessionStorage.removeItem("sortFeedStatus");
+          removeFeedRankBannerMessage();
+          sessionStorage.removeItem("feedRankStopSorting");
+          sessionStorage.removeItem("feedRankStatus");
           resolve(itemsCleaned);
           return;
         } else {
@@ -1659,8 +1659,8 @@ async function sort_date_posts(
             let itemsCleaned = save_data_locally_again(singleNodeJSONUpdated);
             send_items_collected_no(itemsCleaned);
             insta_banner_notification(itemsCleaned, "Posts");
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatus");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatus");
             resolve(itemsCleaned);
           }
 
@@ -1690,8 +1690,8 @@ async function sort_date_posts(
             }
             // Older than the start — stop the scroll.
             let itemsCleaned = inMemoryFeedData.items;
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatus");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatus");
             resolve(itemsCleaned);
             break;
           }
@@ -1740,11 +1740,11 @@ async function sort_date_reels(
         _sfNoteScanCursor(createDate);
       }
 
-      if (sessionStorage.getItem("sortFeedStatus")) {
-        let sort_feed_sorting = sessionStorage.getItem("sortFeedStopSorting");
+      if (sessionStorage.getItem("feedRankStatus")) {
+        let feedrank_sorting = sessionStorage.getItem("feedRankStopSorting");
 
         // ✅ Case 00 -- user clicked stop sorting
-        if (sort_feed_sorting === "on") {
+        if (feedrank_sorting === "on") {
           _sfOutlierPool.stoppedByUser = true; // aborted sort → skip outlier scoring
           // Only save the in-progress reel if it's actually in range. For deep
           // past ranges where the loop is skipping newer-than-end reels, the
@@ -1759,9 +1759,9 @@ async function sort_date_reels(
           } catch (e) {
             itemsCleaned = inMemoryFeedData.items;
           }
-          removeSortFeedBannerMessage();
-          sessionStorage.removeItem("sortFeedStopSorting");
-          sessionStorage.removeItem("sortFeedStatus");
+          removeFeedRankBannerMessage();
+          sessionStorage.removeItem("feedRankStopSorting");
+          sessionStorage.removeItem("feedRankStatus");
           profileNameIG = null;
           resolve(itemsCleaned);
           return;
@@ -1779,8 +1779,8 @@ async function sort_date_reels(
             let itemsCleaned = save_data_locally_again(singleNodeJSONUpdated);
             send_items_collected_no(itemsCleaned);
             insta_banner_notification(itemsCleaned, "Reels");
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatus");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatus");
             profileNameIG = null;
             resolve(itemsCleaned);
           }
@@ -1809,8 +1809,8 @@ async function sort_date_reels(
             }
             // Older than the start — stop the scroll.
             let itemsCleaned = inMemoryFeedData.items;
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatus");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatus");
             profileNameIG = null;
             resolve(itemsCleaned);
             break;
@@ -1890,7 +1890,7 @@ async function sort_date_reels(
         this._url &&
         sfIsGraphqlUrl(this._url) &&
         (this.responseType === "" || this.responseType === "text") &&
-        sessionStorage.getItem("sortFeedStatus")
+        sessionStorage.getItem("feedRankStatus")
       ) {
         try {
           _sfNoteResponseDepth(JSON.parse(this.responseText));
@@ -1923,11 +1923,11 @@ async function sort_date_reels(
       if (
         sfIsGraphqlUrl(this._url) &&
         (this.responseType === "" || this.responseType === "text") &&
-        sessionStorage.getItem("sortFeedStatus") &&
-        sessionStorage.getItem("sortFeedPostsVSReels") === "Posts" &&
+        sessionStorage.getItem("feedRankStatus") &&
+        sessionStorage.getItem("feedRankPostsVSReels") === "Posts" &&
         sessionStorage.getItem("sortItemsVsDates") === "dates" &&
-        sessionStorage.getItem("sortFeedSurface") !== "explore_search" &&
-        sessionStorage.getItem("sortFeedSurface") !== "saved"
+        sessionStorage.getItem("feedRankSurface") !== "explore_search" &&
+        sessionStorage.getItem("feedRankSurface") !== "saved"
       ) {
         try {
           let jsonResponse = JSON.parse(this.responseText);
@@ -1943,7 +1943,7 @@ async function sort_date_reels(
               jsonResponse.data
                 .xdt_api__v1__feed__user_timeline_graphql_connection.page_info
                 .has_next_page;
-            let sort_selected = sessionStorage.getItem("sortFeedNoItems");
+            let sort_selected = sessionStorage.getItem("feedRankNoItems");
             let [start_date, end_date] = return_date_range(sort_selected);
 
             sort_date_posts(
@@ -1974,11 +1974,11 @@ async function sort_date_reels(
       else if (
         sfIsGraphqlUrl(this._url) &&
         (this.responseType === "" || this.responseType === "text") &&
-        sessionStorage.getItem("sortFeedStatus") &&
-        sessionStorage.getItem("sortFeedPostsVSReels") === "Posts" &&
+        sessionStorage.getItem("feedRankStatus") &&
+        sessionStorage.getItem("feedRankPostsVSReels") === "Posts" &&
         sessionStorage.getItem("sortItemsVsDates") === "items" &&
-        sessionStorage.getItem("sortFeedSurface") !== "explore_search" &&
-        sessionStorage.getItem("sortFeedSurface") !== "saved"
+        sessionStorage.getItem("feedRankSurface") !== "explore_search" &&
+        sessionStorage.getItem("feedRankSurface") !== "saved"
       ) {
         // if (!isSortingSessionActive) {
         //   reset_in_memory_feed_data(); // ✅ only on first call
@@ -2021,11 +2021,11 @@ async function sort_date_reels(
       else if (
         sfIsGraphqlUrl(this._url) &&
         (this.responseType === "" || this.responseType === "text") &&
-        sessionStorage.getItem("sortFeedStatus") &&
-        sessionStorage.getItem("sortFeedPostsVSReels") === "Reels" &&
+        sessionStorage.getItem("feedRankStatus") &&
+        sessionStorage.getItem("feedRankPostsVSReels") === "Reels" &&
         sessionStorage.getItem("sortItemsVsDates") === "dates" &&
-        sessionStorage.getItem("sortFeedSurface") !== "explore_search" &&
-        sessionStorage.getItem("sortFeedSurface") !== "saved"
+        sessionStorage.getItem("feedRankSurface") !== "explore_search" &&
+        sessionStorage.getItem("feedRankSurface") !== "saved"
       ) {
         try {
           let jsonResponse = JSON.parse(this.responseText);
@@ -2035,7 +2035,7 @@ async function sort_date_reels(
             let nextPage =
               sfGetClipsConnection(jsonResponse).page_info
                 .has_next_page;
-            let sort_selected = sessionStorage.getItem("sortFeedNoItems");
+            let sort_selected = sessionStorage.getItem("feedRankNoItems");
             let [start_date, end_date] = return_date_range(sort_selected);
 
             sort_date_reels(numberItems, jsonResponse, nextPage, start_date, end_date)
@@ -2065,11 +2065,11 @@ async function sort_date_reels(
       else if (
         sfIsGraphqlUrl(this._url) &&
         (this.responseType === "" || this.responseType === "text") &&
-        sessionStorage.getItem("sortFeedStatus") &&
-        sessionStorage.getItem("sortFeedPostsVSReels") === "Reels" &&
+        sessionStorage.getItem("feedRankStatus") &&
+        sessionStorage.getItem("feedRankPostsVSReels") === "Reels" &&
         sessionStorage.getItem("sortItemsVsDates") !== "dates" &&
-        sessionStorage.getItem("sortFeedSurface") !== "explore_search" &&
-        sessionStorage.getItem("sortFeedSurface") !== "saved"
+        sessionStorage.getItem("feedRankSurface") !== "explore_search" &&
+        sessionStorage.getItem("feedRankSurface") !== "saved"
       ) {
 
         try {

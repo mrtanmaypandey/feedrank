@@ -29,7 +29,7 @@
     // The flag is cleared on page load (init script) and on SPA navigation
     // (history hook below) so it never bleeds into a different profile or a
     // fresh refresh.
-    if (isTarget && sessionStorage.getItem("sortFeedSortDoneTikTok") === "true") {
+    if (isTarget && sessionStorage.getItem("feedRankSortDoneTikTok") === "true") {
       return new Response('{"itemList":[],"hasMore":false,"statusCode":0}', {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -40,9 +40,9 @@
 
     if (!isTarget) return res;
 
-    const statusOn = !!sessionStorage.getItem("sortFeedStatusTikTok");
+    const statusOn = !!sessionStorage.getItem("feedRankStatusTikTok");
     // Outlier pool mode keeps recording pages AFTER the display phase clears
-    // sortFeedStatusTikTok (the recorder gates on _sfOutlierRecordOnTk, which
+    // feedRankStatusTikTok (the recorder gates on _sfOutlierRecordOnTk, which
     // stays true while pool.active). So parse when EITHER is on.
     //
     // ⚠️ _sfOutlierRecordOnTk, not _sfOutlierSessionOn: the pool now fills on
@@ -120,7 +120,7 @@
   window.__sfHistoryHooked = true;
   const _push = history.pushState;
   const _replace = history.replaceState;
-  const clearBlock = () => sessionStorage.removeItem("sortFeedSortDoneTikTok");
+  const clearBlock = () => sessionStorage.removeItem("feedRankSortDoneTikTok");
   history.pushState = function () {
     clearBlock();
     return _push.apply(this, arguments);
@@ -180,7 +180,7 @@ function reset_in_memory_feed_data() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Stop Sorting — immediate abort (mirrors Instagram/script_instagram.js)
 //
-// The banner's Stop button raises `sortFeedStopSorting` AND posts
+// The banner's Stop button raises `feedRankStopSorting` AND posts
 // `sf_stop_sorting` (see _sfRequestStopTikTok in banner_on_tiktok.js). The flag
 // on its own can only be POLLED, and the loops poll it *after*
 // `await find_element_tiktok_again` — which backs off across 12 attempts
@@ -203,7 +203,7 @@ const _sfStopTk = {
 function _sfStopTkRequested() {
   if (_sfStopTk.requested) return true;
   try {
-    return sessionStorage.getItem("sortFeedStopSorting") === "on";
+    return sessionStorage.getItem("feedRankStopSorting") === "on";
   } catch (e) {
     return false;
   }
@@ -251,7 +251,7 @@ window.addEventListener("message", (event) => {
   // Profile surface only. Search and Saved run in their own page-world scripts
   // with their own memory, and all three receive this same broadcast — the
   // surface flag (unset on profile) decides which one owns the abort.
-  if (sessionStorage.getItem("sortFeedSurfaceTikTok")) return;
+  if (sessionStorage.getItem("feedRankSurfaceTikTok")) return;
   _sfStopTkNow();
 });
 
@@ -271,7 +271,7 @@ function _sfOutlierCancelTk() {
   P.resolveFn = null;
   if (resolveFn) resolveFn(cancelled);
 
-  return sessionStorage.getItem("sortFeedOutlierTikTok") === "on" ? cancelled : null;
+  return sessionStorage.getItem("feedRankOutlierTikTok") === "on" ? cancelled : null;
 }
 
 // ── One render, ever ────────────────────────────────────────────────────────
@@ -292,18 +292,18 @@ function _sfTkRenderSorted(items, sfOutlierMeta) {
   const scoreable = _sfOutlierScorableSurfaceTk();
   const stoppedShort = _sfStopTkRequested() || _sfOutlierPool.stoppedByUser;
 
-  sessionStorage.removeItem("sortFeedStopSorting");
-  sessionStorage.removeItem("sortFeedStatusTikTok");
+  sessionStorage.removeItem("feedRankStopSorting");
+  sessionStorage.removeItem("feedRankStatusTikTok");
   // Tells the fetch hook to start blocking further item_list requests. Must be
   // set on the Stop path too, or TikTok keeps feeding us pages after the render.
-  sessionStorage.setItem("sortFeedSortDoneTikTok", "true");
+  sessionStorage.setItem("feedRankSortDoneTikTok", "true");
 
   const list = Array.isArray(items) ? items : [];
 
   // Stopped before a single tile finished capturing — nothing to render, so
   // leave TikTok's own feed alone and just clear our chrome.
   if (!list.length) {
-    removeSortFeedBannerMessage();
+    removeFeedRankBannerMessage();
     remove_overlay();
     return;
   }
@@ -348,10 +348,10 @@ function _sfTkRenderSorted(items, sfOutlierMeta) {
   // breakout" would be baffling on a plain likes sort the user never asked to score.
   _sfOutlierNotifyOutcome(list, sfOutlierMeta);
 
-  const sort_by = sessionStorage.getItem("sortFeedSortBy");
+  const sort_by = sessionStorage.getItem("feedRankSortBy");
   const sorted_items = sort_items_tiktok(list, sort_by);
 
-  removeSortFeedBannerMessage();
+  removeFeedRankBannerMessage();
   remove_overlay();
 
   window.postMessage(
@@ -371,15 +371,15 @@ function _sfTkBuildCtx(items, sfOutlierMeta) {
   const list = Array.isArray(items) ? items : [];
   let stopped = false;
   try {
-    stopped = _sfStopTk.requested || sessionStorage.getItem("sortFeedStopSorting") === "on";
+    stopped = _sfStopTk.requested || sessionStorage.getItem("feedRankStopSorting") === "on";
   } catch (e) {}
   return {
     mode: sessionStorage.getItem("sortItemsVsDates"),      // "items" | "dates"
-    selection: sessionStorage.getItem("sortFeedNoItems"),  // "100_reels" | "3_month" | "custom_…"
-    sortBy: sessionStorage.getItem("sortFeedSortBy"),
+    selection: sessionStorage.getItem("feedRankNoItems"),  // "100_reels" | "3_month" | "custom_…"
+    sortBy: sessionStorage.getItem("feedRankSortBy"),
     // Profile is the only surface with no flag — search/favorites/liked/
     // collection each run in their own page-world script and stamp their own.
-    surface: sessionStorage.getItem("sortFeedSurfaceTikTok") || "profile",
+    surface: sessionStorage.getItem("feedRankSurfaceTikTok") || "profile",
     path: location.pathname,
     search: location.search,
     collectedCount: list.length,
@@ -402,15 +402,15 @@ function _sfTkFinalizeEmptyRange() {
   // router would go cold regardless — this keeps the record honest.)
   const _sfCtx = Object.assign(_sfTkBuildCtx([], null), { empty: true });
 
-  sessionStorage.removeItem("sortFeedStopSorting");
-  sessionStorage.removeItem("sortFeedStatusTikTok");
-  sessionStorage.setItem("sortFeedSortDoneTikTok", "true");
+  sessionStorage.removeItem("feedRankStopSorting");
+  sessionStorage.removeItem("feedRankStatusTikTok");
+  sessionStorage.setItem("feedRankSortDoneTikTok", "true");
 
   window.postMessage({ tiktok_date_range_empty: true, sf_ctx: _sfCtx }, "*");
 }
 
 window.addEventListener("message", (event) => {
-  if (event.data?.source === "sortfeed" && event.data?.type === "reset_tiktok_session") {
+  if (event.data?.source === "feedrank" && event.data?.type === "reset_tiktok_session") {
     // console.log("[SF] reset_tiktok_session received");
     reset_in_memory_feed_data();
     window.__sfSeenIds = new Set(); // optional dedupe if you add it
@@ -439,7 +439,7 @@ window.addEventListener("message", (event) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Outlier score — baseline pool (Profile → Videos only, gated by the
-// `sortFeedOutlierTikTok` sessionStorage flag set in init_sortfeed_tiktok.js).
+// `feedRankOutlierTikTok` sessionStorage flag set in init_feedrank_tiktok.js).
 //
 // Mirrors the Instagram engine (Instagram/script_instagram.js) 1:1, simplified
 // to a single metric: TikTok is VIEWS-only (playCount), so there's no Posts/
@@ -526,15 +526,15 @@ function _sfOutlierMetric() {
 
 // Can this surface be scored at all? Profile Videos only — search and the three
 // saved surfaces are multi-creator, so a median across them would be meaningless.
-// They each set sortFeedSurfaceTikTok; profile is the one with no flag.
+// They each set feedRankSurfaceTikTok; profile is the one with no flag.
 //
-// ⚠️ Deliberately does NOT test `sortFeedStatusTikTok`. Every collect loop clears
+// ⚠️ Deliberately does NOT test `feedRankStatusTikTok`. Every collect loop clears
 // that flag just BEFORE it resolves, so by render time the sort no longer looks
 // "in flight". Gating the render-time baseline work on it is what silently
 // disabled tiers 1 and 2 on Instagram — likes→outlier always re-collected, while
 // outlier→likes worked (that path carries its own meta and never consults this).
 function _sfOutlierScorableSurfaceTk() {
-  return !sessionStorage.getItem("sortFeedSurfaceTikTok");
+  return !sessionStorage.getItem("feedRankSurfaceTikTok");
 }
 
 // Whether to RECORD a response into the pool — a scorable surface with a sort
@@ -548,14 +548,14 @@ function _sfOutlierScorableSurfaceTk() {
 function _sfOutlierRecordOnTk() {
   return (
     _sfOutlierScorableSurfaceTk() &&
-    (sessionStorage.getItem("sortFeedStatusTikTok") !== null || _sfOutlierPool.active)
+    (sessionStorage.getItem("feedRankStatusTikTok") !== null || _sfOutlierPool.active)
   );
 }
 
 // The user explicitly asked for an outlier sort. Drives pool mode + the toasts;
 // everything opportunistic goes through _sfOutlierRecordOnTk instead.
 function _sfOutlierSessionOn() {
-  return sessionStorage.getItem("sortFeedOutlierTikTok") === "on" && _sfOutlierRecordOnTk();
+  return sessionStorage.getItem("feedRankOutlierTikTok") === "on" && _sfOutlierRecordOnTk();
 }
 
 // Profile sorts don't reload on TikTok (mimicTikTokVisit soft-navigates), so the
@@ -703,8 +703,8 @@ function _sfOutlierPoolPageArrived() {
   );
 
   // Stop button pressed during pool mode → render without badges.
-  if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-    sessionStorage.removeItem("sortFeedStopSorting");
+  if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+    sessionStorage.removeItem("feedRankStopSorting");
     _sfOutlierFinish({ status: "cancelled", baseline: null, poolSize: 0 });
     return;
   }
@@ -735,8 +735,8 @@ function _sfOutlierRequestNextPage() {
   clearTimeout(P.waitTimer);
   P.waitTimer = setTimeout(() => {
     if (!P.active) return;
-    if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-      sessionStorage.removeItem("sortFeedStopSorting");
+    if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+      sessionStorage.removeItem("feedRankStopSorting");
       _sfOutlierFinish({ status: "cancelled", baseline: null, poolSize: 0 });
       return;
     }
@@ -759,7 +759,7 @@ function _sfOutlierRequestNextPage() {
 function _sfOutlierEnsurePool() {
   return new Promise((resolve) => {
     try {
-      if (sessionStorage.getItem("sortFeedOutlierTikTok") !== "on") { resolve(null); return; }
+      if (sessionStorage.getItem("feedRankOutlierTikTok") !== "on") { resolve(null); return; }
       const P = _sfOutlierPool;
       if (P.stoppedByUser || _sfStopTkRequested()) {
         resolve({ status: "cancelled", baseline: null, poolSize: 0 });
@@ -808,7 +808,7 @@ function _sfOutlierNotifyOutcome(items, meta) {
   if (!meta) return;
   if (
     (meta.status === "insufficient" || meta.status === "error") &&
-    sessionStorage.getItem("sortFeedSortBy") === "outlier"
+    sessionStorage.getItem("feedRankSortBy") === "outlier"
   ) {
     window.postMessage({ sf_outlier_insufficient: true, metric: meta.metric }, "*");
     return;
@@ -931,15 +931,15 @@ function createMetadataJsonTikTok(jsonResponse) {
 
 // Save feed data locally, init and append
 function save_data_locally_tiktok(singleNodeJSON) {
-  if (sessionStorage.getItem("sortFeedData") !== null) {
-    let itemsCleaned = JSON.parse(sessionStorage.getItem("sortFeedData"));
+  if (sessionStorage.getItem("feedRankData") !== null) {
+    let itemsCleaned = JSON.parse(sessionStorage.getItem("feedRankData"));
     itemsCleaned.push(singleNodeJSON);
-    sessionStorage.setItem("sortFeedData", JSON.stringify(itemsCleaned));
+    sessionStorage.setItem("feedRankData", JSON.stringify(itemsCleaned));
     return itemsCleaned;
   } else {
     let itemsCleaned = [];
     itemsCleaned.push(singleNodeJSON);
-    sessionStorage.setItem("sortFeedData", JSON.stringify(itemsCleaned));
+    sessionStorage.setItem("feedRankData", JSON.stringify(itemsCleaned));
     return itemsCleaned;
   }
 }
@@ -1040,7 +1040,7 @@ function _sfTkScanWorkProgress() {
 // 0..1, or null when this sort has a real item target and doesn't need it.
 function _sfTkScanProgress() {
   const mode = sessionStorage.getItem("sortItemsVsDates");
-  const selection = sessionStorage.getItem("sortFeedNoItems") || "";
+  const selection = sessionStorage.getItem("feedRankNoItems") || "";
   const openEnded = selection === "all_reels";
 
   // Item sorts drive the bar off count ÷ target — except "All", which has no
@@ -1097,7 +1097,7 @@ function insta_banner_notification(itemsCleaned) {
   }
 }
 
-function removeSortFeedBannerMessage() {
+function removeFeedRankBannerMessage() {
   window.postMessage({ insta_banner_notification_remove: true }, "*");
 }
 
@@ -1125,7 +1125,7 @@ function quickHumanScroll(element) {
 //     // ⭐ immediately resolve and stop everything.
 //     // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
 //     const isActive = () =>
-//       !!sessionStorage.getItem("sortFeedStatusTikTok");
+//       !!sessionStorage.getItem("feedRankStatusTikTok");
 
 
 //     const tryFind = (attemptsLeft) => {
@@ -1229,7 +1229,7 @@ function find_element_tiktok_again(id, opts = {}) {
   // Stop makes this wait inactive immediately — the flag read alone would only
   // be seen after the current sleep finished (up to 1.2s).
   const isActive = () =>
-    !!sessionStorage.getItem("sortFeedStatusTikTok") && !_sfStopTk.requested;
+    !!sessionStorage.getItem("feedRankStatusTikTok") && !_sfStopTk.requested;
 
   // Abortable: Stop settles every pending sleep on the click's own tick.
   const sleep = (ms) => _sfStopTkSleep(ms);
@@ -1394,7 +1394,7 @@ async function sort_videos_tiktok(
       // save final data to main object 
       let itemsCleaned = save_data_locally_again(singleNodeJSONUpdated);
 
-      if (sessionStorage.getItem("sortFeedStatusTikTok")) {
+      if (sessionStorage.getItem("feedRankStatusTikTok")) {
         send_items_collected_no(itemsCleaned);
         // show loading banner by sending message to banner_on_tiktok
         // console.log('itemsCleaned'); 
@@ -1402,16 +1402,16 @@ async function sort_videos_tiktok(
         // console.log(itemsCleaned.length); 
 
         insta_banner_notification(itemsCleaned);
-        let sort_feed_sorting = sessionStorage.getItem("sortFeedStopSorting");
+        let feedrank_sorting = sessionStorage.getItem("feedRankStopSorting");
 
         // ✅ Case 00 -- user clicked stop sorting
-        if (sort_feed_sorting === "on") {
+        if (feedrank_sorting === "on") {
           // console.log("CASE 00");
           // console.log("user clicked stop sorting");
           _sfOutlierPool.stoppedByUser = true; // aborted sort → skip outlier scoring
-          sessionStorage.removeItem("sortFeedStopSorting");
-          sessionStorage.removeItem("sortFeedStatusTikTok");
-          removeSortFeedBannerMessage();
+          sessionStorage.removeItem("feedRankStopSorting");
+          sessionStorage.removeItem("feedRankStatusTikTok");
+          removeFeedRankBannerMessage();
           resolve({ itemsCleaned });
           return;
         } else {
@@ -1419,8 +1419,8 @@ async function sort_videos_tiktok(
           if (itemsCleaned.length === sort_selected) {
             // console.log("CASE 01");
             // console.log("scrapped same length chosen");
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatusTikTok");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatusTikTok");
             resolve({ itemsCleaned });
             return;
           }
@@ -1428,8 +1428,8 @@ async function sort_videos_tiktok(
           else if (i === numberItems - 1 && nextPage === false) {
             // console.log("CASE 02");
             // console.log("no more next pages and reached end of network length");
-            sessionStorage.removeItem("sortFeedStopSorting");
-            sessionStorage.removeItem("sortFeedStatusTikTok");
+            sessionStorage.removeItem("feedRankStopSorting");
+            sessionStorage.removeItem("feedRankStatusTikTok");
             resolve({ itemsCleaned });
             return;
           }
@@ -1447,7 +1447,7 @@ async function sort_videos_tiktok(
 }
 
 function return_sort_selection() {
-  const value = sessionStorage.getItem("sortFeedNoItems");
+  const value = sessionStorage.getItem("feedRankNoItems");
   if (value === "all_reels") {
     return 10000;
   }
@@ -1561,17 +1561,17 @@ async function sort_videos_tiktok_dates(
         _sfNoteTkScanCursor(createDate);
       }
 
-      let sort_feed_sorting = sessionStorage.getItem("sortFeedStopSorting");
+      let feedrank_sorting = sessionStorage.getItem("feedRankStopSorting");
 
       // 1st check that status is on 
       // users click stop:  Resolve & remove banner etc & 
 
-      if (sessionStorage.getItem("sortFeedStatusTikTok")) {
+      if (sessionStorage.getItem("feedRankStatusTikTok")) {
 
         // ✅ Case 00 -- user clicked stop sorting
-        if (sort_feed_sorting === "on") {
+        if (feedrank_sorting === "on") {
           _sfOutlierPool.stoppedByUser = true; // aborted sort → skip outlier scoring
-          sessionStorage.removeItem("sortFeedStopSorting");
+          sessionStorage.removeItem("feedRankStopSorting");
           // Only save the in-progress post if it's in range — see IG comment.
           let itemsCleaned;
           try {
@@ -1583,8 +1583,8 @@ async function sort_videos_tiktok_dates(
           } catch (e) {
             itemsCleaned = inMemoryFeedData.items;
           }
-          removeSortFeedBannerMessage();
-          sessionStorage.removeItem("sortFeedStatusTikTok");
+          removeFeedRankBannerMessage();
+          sessionStorage.removeItem("feedRankStatusTikTok");
           resolve({ itemsCleaned });
           return;
         } else {
@@ -1606,7 +1606,7 @@ async function sort_videos_tiktok_dates(
             let itemsCleaned = save_data_locally_again(singleNodeJSONUpdated);
             send_items_collected_no(itemsCleaned);
             insta_banner_notification(itemsCleaned);
-            sessionStorage.removeItem("sortFeedStatusTikTok");
+            sessionStorage.removeItem("feedRankStatusTikTok");
             resolve({ itemsCleaned });
             // return;
           }
@@ -1650,7 +1650,7 @@ async function sort_videos_tiktok_dates(
 
             // Older than the start — stop the scroll.
             let itemsCleaned = inMemoryFeedData.items;
-            sessionStorage.removeItem("sortFeedStatusTikTok");
+            sessionStorage.removeItem("feedRankStatusTikTok");
             resolve({ itemsCleaned });
             break;
           }
@@ -1701,12 +1701,12 @@ function send_add_overlay_msg() {
 //     const response = await originalFetch.apply(this, args);
 
 //     if (!response.ok) {
-//       // console.log('SORT FEED'); 
+//        
 //       if (DBUG) console.error(
 //         `Fetch failed! Status: ${response.status} ${response.statusText}`
 //       );
 //     } else {
-//       // console.log('SORT FEED'); 
+//        
 //       // console.log("✅ Fetch success!", response.url);
 //     }
 
@@ -1720,12 +1720,12 @@ function send_add_overlay_msg() {
 
 
 function remove_uneeded_stuff() {
-  sessionStorage.removeItem("sortFeedSortBy");
-  sessionStorage.removeItem("sortFeedNoItems");
-  sessionStorage.removeItem("sortFeedStatus");
-  sessionStorage.removeItem("sortFeedStatusTikTok");
-  sessionStorage.removeItem("sortFeedData");
-  sessionStorage.removeItem("sortFeedDataSorted"); // should I remove this
+  sessionStorage.removeItem("feedRankSortBy");
+  sessionStorage.removeItem("feedRankNoItems");
+  sessionStorage.removeItem("feedRankStatus");
+  sessionStorage.removeItem("feedRankStatusTikTok");
+  sessionStorage.removeItem("feedRankData");
+  sessionStorage.removeItem("feedRankDataSorted"); // should I remove this
   sessionStorage.removeItem("sortItemsVsDates");
   // console.log('items removed!');
   reset_in_memory_feed_data();
@@ -1738,16 +1738,16 @@ window.addEventListener("message", (event) => {
     // console.log('📦 Received TikTok data:', event.data.jsonResponse);
 
     let url=event.data.url;
-    // console.log(`API Response received - sortFeedStatusTikTok: ${sessionStorage.getItem("sortFeedStatusTikTok")}`);
+    // console.log(`API Response received - feedRankStatusTikTok: ${sessionStorage.getItem("feedRankStatusTikTok")}`);
 
     // Sort-context tracking, before either branch so items and dates both get it.
-    if (url.includes("api/post/item_list") && sessionStorage.getItem("sortFeedStatusTikTok")) {
+    if (url.includes("api/post/item_list") && sessionStorage.getItem("feedRankStatusTikTok")) {
       _sfTkTrackPage(event.data.jsonResponse, event.data.nextPage);
     }
 
     if (
         url.includes("api/post/item_list") &&
-        sessionStorage.getItem("sortFeedStatusTikTok") &&
+        sessionStorage.getItem("feedRankStatusTikTok") &&
         sessionStorage.getItem("sortItemsVsDates") === "items"
       ) {
         
@@ -1779,10 +1779,10 @@ window.addEventListener("message", (event) => {
           // stamp scores, emit the insufficient/no-breakout note, and render with
           // the sf_outlier meta. Resolves null instantly when scoring is off, so
           // non-outlier sorts are byte-identical to before. IMPORTANT: set
-          // sortFeedSortDoneTikTok AFTER the pool so pool-mode fetches aren't
+          // feedRankSortDoneTikTok AFTER the pool so pool-mode fetches aren't
           // short-circuited by the fetch hook.
           // _sfTkRenderSorted stamps the scores, emits the note, sets
-          // sortFeedSortDoneTikTok (so the fetch hook starts blocking further
+          // feedRankSortDoneTikTok (so the fetch hook starts blocking further
           // item_list requests) and renders — behind the one-render latch it
           // shares with the Stop express route.
           _sfOutlierEnsurePool().then((sfOutlierMeta) => {
@@ -1794,7 +1794,7 @@ window.addEventListener("message", (event) => {
       } 
       else if (
         url.includes("api/post/item_list") &&
-        sessionStorage.getItem("sortFeedStatusTikTok")  &&
+        sessionStorage.getItem("feedRankStatusTikTok")  &&
         sessionStorage.getItem("sortItemsVsDates") === "dates"
       ) {
         // reset_in_memory_feed_data(); 
@@ -1803,7 +1803,7 @@ window.addEventListener("message", (event) => {
         let numberItems = event.data.numberItems;
         let jsonResponse = event.data.jsonResponse;
         let nextPage = event.data.nextPage;
-        let sort_selected = sessionStorage.getItem("sortFeedNoItems");
+        let sort_selected = sessionStorage.getItem("feedRankNoItems");
         let [start_date, end_date] = return_date_range(sort_selected);
         sort_videos_tiktok_dates(
           numberItems,
@@ -1826,7 +1826,7 @@ window.addEventListener("message", (event) => {
           // Outlier: finish the baseline pool first (deep/short date ranges still
           // get a full 90/180/365-day baseline via pool mode), then stamp scores,
           // emit the note, and render with the sf_outlier meta. Resolves null
-          // instantly when scoring is off. Set sortFeedSortDoneTikTok AFTER the
+          // instantly when scoring is off. Set feedRankSortDoneTikTok AFTER the
           // pool so pool-mode fetches aren't short-circuited by the fetch hook.
           _sfOutlierEnsurePool().then((sfOutlierMeta) => {
             _sfTkRenderSorted(itemsCleaned, sfOutlierMeta);

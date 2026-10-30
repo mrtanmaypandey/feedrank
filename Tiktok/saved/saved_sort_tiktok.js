@@ -43,7 +43,7 @@
   };
 
   const activeSurface = () => {
-    const s = sessionStorage.getItem("sortFeedSurfaceTikTok");
+    const s = sessionStorage.getItem("feedRankSurfaceTikTok");
     return SURFACE_MAP[s] ? s : null;
   };
 
@@ -68,7 +68,7 @@
 
   // ─── Stop Sorting — immediate abort ──────────────────────────────────────
   // Mirrors script_tiktok.js's `_sfStopTk`, self-contained because this file is
-  // its own IIFE. The banner's Stop raises `sortFeedStopSorting` AND posts
+  // its own IIFE. The banner's Stop raises `feedRankStopSorting` AND posts
   // `sf_stop_sorting`; the flag alone could only be polled, and the poll sits
   // *after* `await findElement`, which backs off across 12 attempts (~9s worst
   // case) plus a 1.2s media wait.
@@ -77,7 +77,7 @@
   function stopRequested() {
     if (sfStopSaved.requested) return true;
     try {
-      return sessionStorage.getItem("sortFeedStopSorting") === "on";
+      return sessionStorage.getItem("feedRankStopSorting") === "on";
     } catch (e) {
       return false;
     }
@@ -199,7 +199,7 @@
     // Stop makes this wait inactive immediately — the flag read alone would
     // only be seen after the current sleep finished (up to 1.2s).
     const isActive = () =>
-      !!sessionStorage.getItem("sortFeedStatusTikTok") &&
+      !!sessionStorage.getItem("feedRankStatusTikTok") &&
       !!activeSurface() &&
       !sfStopSaved.requested;
 
@@ -303,7 +303,7 @@
   }
 
   function readTarget() {
-    const value = sessionStorage.getItem("sortFeedNoItems") || "";
+    const value = sessionStorage.getItem("feedRankNoItems") || "";
     if (value === "all_reels") return 10000; // saved lists are finite; defensive cap
     const m = value.match(/^(\d+)_reels$/);
     return m ? parseInt(m[1], 10) : 25;
@@ -332,7 +332,7 @@
   const SF_TT_SAVED_SCAN_LAST_PAGE_FLOOR = 0.9;
 
   function savedScanProgress(count) {
-    if ((sessionStorage.getItem("sortFeedNoItems") || "") !== "all_reels") return null;
+    if ((sessionStorage.getItem("feedRankNoItems") || "") !== "all_reels") return null;
     let progress = count / (count + SF_TT_SAVED_SCAN_K);
     if (sfSavedExhausted) progress = Math.max(progress, SF_TT_SAVED_SCAN_LAST_PAGE_FLOOR);
     return Math.max(0, Math.min(1, progress));
@@ -355,14 +355,14 @@
     if (sfSavedFinalized) return;
     sfSavedFinalized = true;
 
-    sessionStorage.removeItem("sortFeedStopSorting");
-    sessionStorage.removeItem("sortFeedStatusTikTok");
+    sessionStorage.removeItem("feedRankStopSorting");
+    sessionStorage.removeItem("feedRankStatusTikTok");
     // Blocks subsequent saved fetches so TikTok's infinite-scroll spinner stays
     // dead after the sort.
-    sessionStorage.setItem("sortFeedSortDoneTikTok", "true");
+    sessionStorage.setItem("feedRankSortDoneTikTok", "true");
 
     const list = Array.isArray(collected) ? collected : [];
-    const surface = sessionStorage.getItem("sortFeedSurfaceTikTok");
+    const surface = sessionStorage.getItem("feedRankSurfaceTikTok");
 
     // Stopped before a single tile finished capturing — nothing to render, so
     // leave TikTok's own grid alone and just clear our chrome.
@@ -372,7 +372,7 @@
       return;
     }
 
-    const sortBy = sessionStorage.getItem("sortFeedSortBy");
+    const sortBy = sessionStorage.getItem("feedRankSortBy");
     const sorted = sortItems(list, sortBy);
 
     removeBanner();
@@ -392,7 +392,7 @@
         // the path — is what keeps the two apart.
         sf_ctx: {
           mode: sessionStorage.getItem("sortItemsVsDates"),
-          selection: sessionStorage.getItem("sortFeedNoItems"),
+          selection: sessionStorage.getItem("feedRankNoItems"),
           sortBy: sortBy,
           surface: surface,          // ttfavorites | ttliked | ttcollection
           path: location.pathname,
@@ -431,7 +431,7 @@
       meta._sfSeq = sfSavedMemory.items.length;
       sfSavedMemory.items.push(meta);
 
-      if (!sessionStorage.getItem("sortFeedStatusTikTok")) {
+      if (!sessionStorage.getItem("feedRankStatusTikTok")) {
         return sfSavedMemory.items;
       }
 
@@ -439,22 +439,22 @@
       notifyBanner(sfSavedMemory.items.length);
 
       // Case 00 — user clicked Stop Sorting
-      if (sessionStorage.getItem("sortFeedStopSorting") === "on") {
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatusTikTok");
+      if (sessionStorage.getItem("feedRankStopSorting") === "on") {
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatusTikTok");
         removeBanner();
         return sfSavedMemory.items;
       }
       // Case 01 — hit the chosen count
       if (sfSavedMemory.items.length >= target) {
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatusTikTok");
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatusTikTok");
         return sfSavedMemory.items;
       }
       // Case 02 — last item, no more pages
       if (i === items.length - 1 && !hasMore) {
-        sessionStorage.removeItem("sortFeedStopSorting");
-        sessionStorage.removeItem("sortFeedStatusTikTok");
+        sessionStorage.removeItem("feedRankStopSorting");
+        sessionStorage.removeItem("feedRankStatusTikTok");
         return sfSavedMemory.items;
       }
       // Case 03 — last item, more pages → wait for next fetch
@@ -473,7 +473,7 @@
 
     // Short-circuit subsequent saved fetches once the sort is done, so TikTok's
     // native infinite-scroll spinner doesn't spin forever.
-    if (isSaved && sessionStorage.getItem("sortFeedSortDoneTikTok") === "true") {
+    if (isSaved && sessionStorage.getItem("feedRankSortDoneTikTok") === "true") {
       return new Response('{"statusCode":0,"itemList":[],"hasMore":false}', {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -484,7 +484,7 @@
     if (!isSaved) return res;
 
     try {
-      if (!sessionStorage.getItem("sortFeedStatusTikTok")) return res;
+      if (!sessionStorage.getItem("feedRankStatusTikTok")) return res;
 
       const clone = res.clone();
       const text = await clone.text();
@@ -523,7 +523,7 @@
   window.addEventListener("message", (event) => {
     if (
       event.source === window &&
-      event.data?.source === "sortfeed" &&
+      event.data?.source === "feedrank" &&
       event.data?.type === "reset_tiktok_session"
     ) {
       sfSavedMemory.items = [];

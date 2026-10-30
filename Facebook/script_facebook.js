@@ -61,8 +61,8 @@
   // One-shot sort flag: capture it for THIS page load, then clear it immediately so
   // a plain refresh (no sort click) does NOT re-trigger collection. The interceptor
   // and boot both gate on this in-memory boolean, not the (now-cleared) sessionStorage.
-  const SORT_ACTIVE = sessionStorage.getItem("sortFeedStatusFacebook") === "on";
-  if (SORT_ACTIVE) sessionStorage.removeItem("sortFeedStatusFacebook");
+  const SORT_ACTIVE = sessionStorage.getItem("feedRankStatusFacebook") === "on";
+  if (SORT_ACTIVE) sessionStorage.removeItem("feedRankStatusFacebook");
 
   // ──────────────────────────────────────────────────────────────────────────
   // Reconstruction (research doc §3.3) — exact field keys + null traps
@@ -441,7 +441,7 @@
   // ──────────────────────────────────────────────────────────────────────────
   // Stop Sorting — immediate abort (mirrors Instagram/script_instagram.js)
   //
-  // The banner's Stop button raises `sortFeedStopSortingFacebook` AND posts
+  // The banner's Stop button raises `feedRankStopSortingFacebook` AND posts
   // `sf_stop_sorting` (see _sfRequestStopFacebook in banner_on_facebook.js). The
   // flag on its own can only be POLLED, and collect() polls it once per scroll
   // round — a round that costs a find_element_facebook wait (up to 20×100ms)
@@ -462,7 +462,7 @@
   function _sfStopFbRequested() {
     if (_sfStopFb.requested) return true;
     try {
-      return sessionStorage.getItem("sortFeedStopSortingFacebook") === "on";
+      return sessionStorage.getItem("feedRankStopSortingFacebook") === "on";
     } catch (e) {
       return false;
     }
@@ -550,7 +550,7 @@
   // 0..1, or null when this sort has a real item target and doesn't need it.
   function _sfFbScanProgress() {
     const isDates = sessionStorage.getItem("sortItemsVsDatesFacebook") === "dates";
-    const noItems = sessionStorage.getItem("sortFeedNoItemsFacebook") || "";
+    const noItems = sessionStorage.getItem("feedRankNoItemsFacebook") || "";
     // Item sorts drive the bar off count ÷ target — except "All" (and anything else
     // with no parseable number), which has no target and fell into the very same
     // dead branch in the banner. Matches _sfFbSortTarget() in banner_on_facebook.js.
@@ -593,7 +593,7 @@
         return t >= s && t < e;
       }).length;
     } else {
-      const t = fbTargetCount(sessionStorage.getItem("sortFeedNoItemsFacebook"));
+      const t = fbTargetCount(sessionStorage.getItem("feedRankNoItemsFacebook"));
       shown = t === Infinity ? reelsById.size : Math.min(reelsById.size, t);
     }
     const msg = { fb_banner_notification: true, count: shown, type: "Reels" };
@@ -641,7 +641,7 @@
 
   // ──────────────────────────────────────────────────────────────────────────
   // Outlier score — baseline pool (Profile → Reels ONLY, gated by the
-  // `sortFeedOutlier` sessionStorage flag set in init_sortfeed_facebook.js).
+  // `feedRankOutlier` sessionStorage flag set in init_feedrank_facebook.js).
   // Mirrors Instagram/script_instagram.js's engine, adapted to FB's collection:
   //   • score = reel VIEWS ÷ baseline, baseline = MEDIAN views of the account's
   //     most recent 25 qualifying reels — qualifying = a view count plus
@@ -718,7 +718,7 @@
   // Every outlier meta goes through here. The three trailing fields are
   // diagnostics for the sort context (it is mirrored to sessionStorage by the
   // renderer), so a live sort can be checked from the console afterwards:
-  //   JSON.parse(sessionStorage.sortFeedLastSortFacebook).outlier
+  //   JSON.parse(sessionStorage.feedRankLastSortFacebook).outlier
   //   → banked (every reel collected), qualifying (mature + counted),
   //     poolSize (the median's sample, ≤ cap), poolPages (fetched past display),
   //     fresh (banked reels under 72h — the page's posting rhythm), undated
@@ -742,8 +742,8 @@
 
   // Profile Reels tab + outlier flag on.
   function _sfFbOutlierOn() {
-    return sessionStorage.getItem("sortFeedOutlier") === "on" &&
-      sessionStorage.getItem("sortFeedSurfaceFacebook") === "profile_reels";
+    return sessionStorage.getItem("feedRankOutlier") === "on" &&
+      sessionStorage.getItem("feedRankSurfaceFacebook") === "profile_reels";
   }
 
   // Lazily build + cache the CLDR inverter (shared by the display Views parse and
@@ -869,7 +869,7 @@
   // Correctness rides entirely on _sfFbOutlierEvaluate() — the same gate an explicit
   // outlier sort uses. There is no second, looser path here to get wrong.
   function _sfFbOutlierFreeBaseline() {
-    if (sessionStorage.getItem("sortFeedSurfaceFacebook") !== "profile_reels") return null;
+    if (sessionStorage.getItem("feedRankSurfaceFacebook") !== "profile_reels") return null;
     // A stopped run renders a truncated set and its pool is truncated the same
     // way — a truncated pool would bias the median, so bail explicitly.
     if (_sfStopFbRequested()) return null;
@@ -1029,7 +1029,7 @@
   function _sfFbOutlierNotifyOutcome(objects, meta) {
     if (!meta) return;
     if ((meta.status === "insufficient" || meta.status === "error") &&
-        sessionStorage.getItem("sortFeedSortByFacebook") === "outlier") {
+        sessionStorage.getItem("feedRankSortByFacebook") === "outlier") {
       window.postMessage({ sf_outlier_insufficient: true, metric: meta.metric }, "*");
       return;
     }
@@ -1038,7 +1038,7 @@
     // this guard a plain views sort could announce "no outliers" — a verdict on a
     // question nobody asked.
     if (meta.status === "ok" && Array.isArray(objects) &&
-        sessionStorage.getItem("sortFeedSortByFacebook") === "outlier") {
+        sessionStorage.getItem("feedRankSortByFacebook") === "outlier") {
       const anyBadge = objects.some((o) => o && typeof o.OutlierScore === "number" && o.OutlierScore >= SF_FB_OUTLIER_BADGE_MIN);
       if (!anyBadge) window.postMessage({ sf_outlier_no_breakout: true, metric: meta.metric }, "*");
     }
@@ -1067,7 +1067,7 @@
       mode: o.isDates ? "dates" : "items",
       selection: o.noItems,
       sortBy: o.sortBy,
-      surface: sessionStorage.getItem("sortFeedSurfaceFacebook") || "profile_reels",
+      surface: sessionStorage.getItem("feedRankSurfaceFacebook") || "profile_reels",
       path: location.pathname,
       search: location.search,
       locKey: _sfFbLocationKey(),
@@ -1098,7 +1098,7 @@
     if (collected) return;
     collected = true;
 
-    const noItems = sessionStorage.getItem("sortFeedNoItemsFacebook");
+    const noItems = sessionStorage.getItem("feedRankNoItemsFacebook");
     const isDates = sessionStorage.getItem("sortItemsVsDatesFacebook") === "dates";
     if (isDates) dateModeRange = fbDateRange(noItems);
     // Date mode has no count cap — collection is bounded by the range start instead.
@@ -1177,7 +1177,7 @@
       // later re-sort refuses outright rather than trusting a stale context.
       // (Belt and braces: an empty result never mounts a banner either, and the
       // router's caller only runs when the banner is present.)
-      const emptyCtx = _sfFbSortContext({ isDates, noItems, sortBy: sessionStorage.getItem("sortFeedSortByFacebook") || "views", collectedCount: 0, empty: true });
+      const emptyCtx = _sfFbSortContext({ isDates, noItems, sortBy: sessionStorage.getItem("feedRankSortByFacebook") || "views", collectedCount: 0, empty: true });
       if (isDates) {
         // Date range matched nothing — leave the feed exactly as it is (don't hide
         // it behind an empty sorted grid) and turn the progress banner into a
@@ -1237,7 +1237,7 @@
     _sfFbOutlierStampScores(objects, sfOutlierMeta);
     _sfFbOutlierNotifyOutcome(objects, sfOutlierMeta);
 
-    const sortBy = sessionStorage.getItem("sortFeedSortByFacebook") || "views";
+    const sortBy = sessionStorage.getItem("feedRankSortByFacebook") || "views";
     const sorted = sort_items_facebook(objects, sortBy);
     const out = sorted.map(({ _ts, ...rest }) => rest);   // drop the internal key (keeps OutlierScore)
 

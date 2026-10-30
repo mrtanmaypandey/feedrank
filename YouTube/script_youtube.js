@@ -2,7 +2,7 @@
 // Injected into the MAIN world by inject_youtube_script.js so it can read
 // window.ytInitialData / window.ytcfg and call YouTube's own InnerTube APIs.
 //
-// Flow on a fresh load after a sort reload (flags set by init_sortfeed_youtube.js):
+// Flow on a fresh load after a sort reload (flags set by init_feedrank_youtube.js):
 //   1) COLLECT the roster (videoIds + feed order) — page 1 from ytInitialData,
 //      further pages via direct POST /youtubei/v1/browse continuation calls
 //      (no fetch-wrap, no scrolling — same technique as the player calls).
@@ -21,11 +21,11 @@
   // Gate: only run right after a sort reload.
   let STATUS, SURFACE, SORT_BY, NO_ITEMS, ITEMS_VS_DATES;
   try {
-    STATUS = sessionStorage.getItem("sortFeedStatusYouTube");
-    SURFACE = sessionStorage.getItem("sortFeedSurfaceYouTube");       // 'ytshorts' | 'ytvideos'
-    SORT_BY = sessionStorage.getItem("sortFeedSortByYouTube");         // 'views' | 'likes' | 'oldest'
-    NO_ITEMS = sessionStorage.getItem("sortFeedNoItemsYouTube");       // '25_reels' … 'all_reels'
-    ITEMS_VS_DATES = sessionStorage.getItem("sortItemsVsDatesYouTube"); // 'items' | 'dates'
+    STATUS = sessionStorage.getItem("feedRankStatusYouTube");
+    SURFACE = sessionStorage.getItem("feedRankSurfaceYouTube");       // 'ytshorts' | 'ytvideos'
+    SORT_BY = sessionStorage.getItem("feedRankSortByYouTube");         // 'views' | 'likes' | 'oldest'
+    NO_ITEMS = sessionStorage.getItem("feedRankNoItemsYouTube");       // '25_reels' … 'all_reels'
+    ITEMS_VS_DATES = sessionStorage.getItem("feedRankItemsVsDatesYouTube"); // 'items' | 'dates'
   } catch (e) { return; }
   if (STATUS !== "on") return;
 
@@ -45,7 +45,7 @@
   // run). That is not an empty channel, and saying "no videos available to sort"
   // would be a lie — the banner routes it to the stall message instead.
   const postEmpty = (dateEmpty, noData) => {
-    try { sessionStorage.removeItem("sortFeedStatusYouTube"); } catch (e) {}
+    try { sessionStorage.removeItem("feedRankStatusYouTube"); } catch (e) {}
     const msg = { kind: "empty" };
     if (dateEmpty) msg.dateEmpty = true;
     if (noData) msg.noData = true;
@@ -89,7 +89,7 @@
   const OUTLIER_ROSTER_HEADROOM = 300;            // roster pre-collected for the pool; extended lazily after
 
   // ── Stop Sorting — immediate abort (mirrors Instagram/script_instagram.js) ──
-  // The banner's Stop raises `sortFeedStopSortingYouTube` AND posts
+  // The banner's Stop raises `feedRankStopSortingYouTube` AND posts
   // `sf_stop_sorting` (see _sfRequestStopYouTube in banner_on_youtube.js). The
   // flag on its own can only be POLLED, and the enrichment workers only poll it
   // at the top of each iteration — after an `await sleep(jitter())` and an
@@ -142,7 +142,7 @@
   const toNum = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; };
   const stopRequested = () => {
     if (_sfStopYt.requested) return true;
-    try { return sessionStorage.getItem("sortFeedStopSortingYouTube") === "on"; } catch (e) { return false; }
+    try { return sessionStorage.getItem("feedRankStopSortingYouTube") === "on"; } catch (e) { return false; }
   };
   // Signal for the InnerTube fetches, so Stop cancels them mid-flight.
   const _sfStopYtSignal = () => (_sfStopYt.controller ? _sfStopYt.controller.signal : undefined);
@@ -508,7 +508,7 @@
     // the banner can drive its bar off. Without it the banner had nothing to
     // compute a percentage from and sat at 0% for the whole scrape (the
     // indeterminate crawl meant to cover this lives in a branch the prep banner
-    // makes unreachable — see injectSortFeedBannerYT).
+    // makes unreachable — see injectFeedRankBannerYT).
     //
     // Two signals, maxed together:
     //   • time coverage — exact whenever the range's start lies inside the feed;
@@ -640,7 +640,7 @@
           // channel's Latest order, so its index is authoritative — where a
           // date is not, for same-day uploads and for premieres/scheduled
           // items YouTube places its own way. A warm re-sort that narrows
-          // ("latest 100" → "latest 50") slices on this; see _sfResortFeedOrderYt.
+          // ("latest 100" → "latest 50") slices on this; see _sfResortOrderYt.
           out[i]._sfSeq = i;
           // How far back in time the scrape has actually reached — drives the
           // progress bar on date / "All" sorts (see scanProgress above).
@@ -779,7 +779,7 @@
     if (DEBUG) { console.log("[SF][YT] sorted result:", items); window.__sfYtResult = items; }
 
     // Clear the run flag so a later manual refresh doesn't re-sort.
-    try { sessionStorage.removeItem("sortFeedStatusYouTube"); } catch (e) {}
+    try { sessionStorage.removeItem("feedRankStatusYouTube"); } catch (e) {}
 
     // ── Back-to-back re-sorting — the sort-context record ───────────────────
     // Describes the scrape that produced THIS grid, so a second popup sort can
